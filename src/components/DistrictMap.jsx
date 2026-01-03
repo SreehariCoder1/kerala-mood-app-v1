@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { playSuccessSound, playErrorSound } from '../utils/audio';
+import toast from 'react-hot-toast';
 
 import config from '../config';
 
@@ -44,7 +45,7 @@ const DistrictMap = () => {
         if (!user || !selectedDistrict) return;
 
         try {
-            await axios.post(`${config.API_URL}/moods`, {
+            await axios.post(`${config.API_UR}/moods`, {
                 districtId: selectedDistrict.id,
                 mood: moodId
             });
@@ -52,11 +53,12 @@ const DistrictMap = () => {
             // Refresh moods immediately
             await fetchMoods();
             playSuccessSound();
+            toast.success("Mood submitted successfully! 🎉");
             setIsMoodSelectorOpen(false);
         } catch (error) {
             console.error("Failed to submit mood", error);
             playErrorSound();
-            alert("Failed to submit mood. Please try again.");
+            toast.error("Failed to submit mood. Please try again.");
         }
     };
 
