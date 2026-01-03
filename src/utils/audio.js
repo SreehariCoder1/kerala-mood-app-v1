@@ -35,7 +35,7 @@ export const playSuccessSound = () => {
 
         // Envelope: Attack -> Decay
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.3, now + 0.05); // quick attack
+        gainNode.gain.linearRampToValueAtTime(0.8, now + 0.05); // increased volume
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4); // decay
 
         oscillator.start(now);
@@ -68,7 +68,7 @@ export const playErrorSound = () => {
         oscillator.frequency.linearRampToValueAtTime(100, now + 0.2); // Pitch drop
 
         // Envelope
-        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.setValueAtTime(0.6, now); // increased volume
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
 
         oscillator.start(now);

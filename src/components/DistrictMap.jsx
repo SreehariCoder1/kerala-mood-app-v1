@@ -45,7 +45,7 @@ const DistrictMap = () => {
         if (!user || !selectedDistrict) return;
 
         try {
-            await axios.post(`${config.API_UR}/moods`, {
+            await axios.post(`${config.API_URL}/moods`, {
                 districtId: selectedDistrict.id,
                 mood: moodId
             });
