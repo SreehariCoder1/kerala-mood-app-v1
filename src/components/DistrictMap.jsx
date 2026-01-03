@@ -5,6 +5,7 @@ import MoodSelector from './MoodSelector';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { playSuccessSound, playErrorSound } from '../utils/audio';
 
 import config from '../config';
 
@@ -50,9 +51,11 @@ const DistrictMap = () => {
 
             // Refresh moods immediately
             await fetchMoods();
+            playSuccessSound();
             setIsMoodSelectorOpen(false);
         } catch (error) {
             console.error("Failed to submit mood", error);
+            playErrorSound();
             alert("Failed to submit mood. Please try again.");
         }
     };
