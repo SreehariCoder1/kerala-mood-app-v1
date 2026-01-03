@@ -39,14 +39,17 @@ export const aggregateDistrictMoods = async () => {
             $group: {
                 _id: "$_id.district",
                 dominantMood: { $first: "$_id.mood" },
-                totalVotes: { $sum: "$count" }
+                totalVotes: { $first: "$count" }
             }
         }
     ]);
 
     const result = {};
     moodStats.forEach(stat => {
-        result[stat._id] = stat.dominantMood;
+        result[stat._id] = {
+            mood: stat.dominantMood,
+            count: stat.totalVotes
+        };
     });
 
     return result;

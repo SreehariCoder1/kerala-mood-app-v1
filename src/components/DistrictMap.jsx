@@ -16,7 +16,7 @@ const DistrictMap = () => {
 
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [isMoodSelectorOpen, setIsMoodSelectorOpen] = useState(false);
-    const [districtMoods, setDistrictMoods] = useState({}); // { districtId: 'happy' }
+    const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
     const [loading, setLoading] = useState(true);
 
     // Fetch moods on mount and poll every 30s
@@ -107,7 +107,9 @@ const DistrictMap = () => {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {districts.map((district) => {
-                        const currentMood = districtMoods[district.id] || 'default';
+                        const districtData = districtMoods[district.id] || {};
+                        const currentMood = districtData.mood || 'default';
+                        const voteCount = districtData.count || 0;
                         const colorClass = moodColors[currentMood] || moodColors['default'];
 
                         // Emoji mapping for display
@@ -128,6 +130,9 @@ const DistrictMap = () => {
                                 <span className="text-3xl mt-2 filter drop-shadow-lg z-10 transition-transform group-hover:scale-110">
                                     {moodEmoji}
                                 </span>
+                                <div className="mt-2 text-xs font-semibold text-white/80 bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
+                                    {voteCount} votes
+                                </div>
                             </motion.div>
                         );
                     })}
