@@ -140,7 +140,7 @@ const DistrictMap = () => {
                                             e.stopPropagation();
                                             setOpenDropdownId(openDropdownId === district.id ? null : district.id);
                                         }}
-                                        className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/30 transition-all shadow-[0_0_10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_15px_rgba(255,255,255,0.6)] animate-pulse hover:animate-none"
+                                        className="w-6 h-6 rounded-full bg-slate-900/40 backdrop-blur-sm border border-white/20 flex items-center justify-center hover:bg-slate-900/60 transition-all shadow-[0_0_10px_rgba(0,0,0,0.3)] hover:shadow-[0_0_15px_rgba(0,0,0,0.5)] animate-pulse hover:animate-none"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
