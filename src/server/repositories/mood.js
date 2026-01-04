@@ -39,7 +39,13 @@ export const aggregateDistrictMoods = async () => {
             $group: {
                 _id: "$_id.district",
                 dominantMood: { $first: "$_id.mood" },
-                totalVotes: { $first: "$count" }
+                totalVotes: { $sum: "$count" },
+                moods: {
+                    $push: {
+                        mood: "$_id.mood",
+                        count: "$count"
+                    }
+                }
             }
         }
     ]);
@@ -48,7 +54,9 @@ export const aggregateDistrictMoods = async () => {
     moodStats.forEach(stat => {
         result[stat._id] = {
             mood: stat.dominantMood,
-            count: stat.totalVotes
+            count: stat.moods.find(m => m.mood === stat.dominantMood)?.count || 0,
+            totalVotes: stat.totalVotes,
+            moods: stat.moods
         };
     });
 
@@ -56,7 +64,7 @@ export const aggregateDistrictMoods = async () => {
 };
 
 export const getMoodStats = async () => {
-    
+
     const today = getTodayDateString();
     const baseMatch = { $match: { date: today } };
 

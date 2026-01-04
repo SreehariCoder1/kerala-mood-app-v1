@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { districts, moodColors } from '../data/districts';
 import MoodSelector from './MoodSelector';
 import AnalyticsPanel from './AnalyticsPanel';
+import DistrictStatsDropdown from './DistrictStatsDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -18,6 +19,7 @@ const DistrictMap = () => {
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [isMoodSelectorOpen, setIsMoodSelectorOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [openDropdownId, setOpenDropdownId] = useState(null);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
     const [loading, setLoading] = useState(true);
 
@@ -127,9 +129,32 @@ const DistrictMap = () => {
                                 onClick={() => handleDistrictClick(district)}
                                 whileHover={{ scale: 1.05, y: -5 }}
                                 whileTap={{ scale: 0.95 }}
-                                className={`${colorClass} p-3 md:p-6 rounded-2xl shadow-lg cursor-pointer backdrop-blur-md bg-opacity-90 border border-white/10 flex flex-col items-center justify-center text-center transition-all duration-500 hover:shadow-2xl h-40 relative overflow-hidden group`}
+                                className={`${colorClass} p-3 md:p-6 rounded-2xl shadow-lg cursor-pointer backdrop-blur-md bg-opacity-90 border border-white/10 flex flex-col items-center justify-center text-center transition-all duration-500 hover:shadow-2xl h-40 relative overflow-visible group ${openDropdownId === district.id ? 'z-50' : 'z-0 hover:z-40'}`}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+
+                                {/* Glowing Arrow Button for Stats Dropdown */}
+                                <div className="absolute top-2 right-2 z-30">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenDropdownId(openDropdownId === district.id ? null : district.id);
+                                        }}
+                                        className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center hover:bg-white/30 transition-all shadow-[0_0_10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_15px_rgba(255,255,255,0.6)] animate-pulse hover:animate-none"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                {/* Stats Dropdown Component */}
+                                <DistrictStatsDropdown
+                                    isOpen={openDropdownId === district.id}
+                                    moods={districtData.moods}
+                                    onClose={() => setOpenDropdownId(null)}
+                                />
+
                                 <h3 className="text-white font-bold text-sm md:text-lg drop-shadow-md z-10 break-words w-full px-1">{district.name}</h3>
                                 <span className="text-3xl mt-2 filter drop-shadow-lg z-10 transition-transform group-hover:scale-110">
                                     {moodEmoji}
