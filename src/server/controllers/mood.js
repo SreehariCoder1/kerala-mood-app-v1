@@ -1,4 +1,4 @@
-import { upsertMood, aggregateDistrictMoods } from '../repositories/mood.js';
+import { upsertMood, aggregateDistrictMoods, getMoodStats as getMoodStatsRepo } from '../repositories/mood.js';
 
 export const submitMood = async (req, res) => {
     // userId from Protected Middleware (Safe!)
@@ -19,6 +19,16 @@ export const getDistrictMoods = async (req, res) => {
         const result = await aggregateDistrictMoods();
         res.status(200).json(result);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching moods", error });
+        
+          res.status(500).json({ message: "Error fetching moods", error });
+    }
+};
+
+export const getMoodStats = async (req, res) => {
+    try {
+        const stats = await getMoodStatsRepo();
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching stats", error });
     }
 };

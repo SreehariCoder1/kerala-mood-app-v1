@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { districts, moodColors } from '../data/districts';
 import MoodSelector from './MoodSelector';
+import AnalyticsPanel from './AnalyticsPanel';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -16,6 +17,7 @@ const DistrictMap = () => {
 
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [isMoodSelectorOpen, setIsMoodSelectorOpen] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(false);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
     const [loading, setLoading] = useState(true);
 
@@ -77,6 +79,8 @@ const DistrictMap = () => {
                 </h1>
 
                 <div className="flex items-center space-x-4">
+
+
                     {user && (
                         <div className="flex items-center space-x-3 bg-slate-800 py-1 px-3 rounded-full border border-white/5">
                             {user.picture ? (
@@ -146,6 +150,58 @@ const DistrictMap = () => {
                 onSubmit={handleMoodSubmit}
                 districtName={selectedDistrict?.name}
             />
+
+            {/* Analytics Dropdown - Positioned below header on right */}
+            <div className="fixed z-50 top-[140px] right-2 min-[600px]:top-20 min-[600px]:right-6">
+                <div className="flex justify-end mb-2">
+                    <button
+                        onClick={() => setShowAnalytics(!showAnalytics)}
+                        className={`
+                            transition-all duration-300 flex items-center justify-center
+                            min-[600px]:bg-indigo-600/90 min-[600px]:hover:bg-indigo-500
+                            min-[600px]:text-white min-[600px]:shadow-lg min-[600px]:shadow-indigo-500/30
+                            min-[600px]:py-2 min-[600px]:px-4 min-[600px]:rounded-full
+                            min-[600px]:border min-[600px]:border-indigo-400/30
+                            min-[600px]:hover:scale-105 min-[600px]:backdrop-blur-md
+                            min-[600px]:space-x-2
+                            
+                            /* Mobile Styles (<600px) */
+                            max-[599px]:w-10 max-[599px]:h-10 max-[599px]:rounded-full
+                            max-[599px]:bg-indigo-500/20 max-[599px]:border max-[599px]:border-indigo-400/50
+                            max-[599px]:shadow-[0_0_15px_rgba(99,102,241,0.6)]
+                            max-[599px]:animate-pulse
+                        `}
+                    >
+                        {/* Desktop Content */}
+                        <span className="hidden min-[600px]:inline font-semibold">Stats</span>
+                        <span className="hidden min-[600px]:inline text-lg">📊</span>
+
+                        {/* Mobile Content: Down Arrow SVG */}
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400 min-[600px]:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
+
+                <AnimatePresence>
+                    {showAnalytics && (
+                        <motion.div
+                            initial={{ y: -10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -10, opacity: 0 }}
+                            className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl overflow-hidden max-h-[calc(100vh-180px)] min-[600px]:max-h-[calc(100vh-120px)] overflow-y-auto pb-4"
+                        >
+                            <div className="bg-slate-800/50 px-4 py-3 border-b border-white/5 flex justify-between items-center">
+                                <h3 className="font-bold text-white text-sm">Leaderboard</h3>
+                                <button onClick={() => setShowAnalytics(false)} className="text-slate-400 hover:text-white">
+                                    X
+                                </button>
+                            </div>
+                            <AnalyticsPanel />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
         </div>
     );

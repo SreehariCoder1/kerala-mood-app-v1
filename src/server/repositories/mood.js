@@ -54,3 +54,62 @@ export const aggregateDistrictMoods = async () => {
 
     return result;
 };
+
+export const getMoodStats = async () => {
+    
+    const today = getTodayDateString();
+    const baseMatch = { $match: { date: today } };
+
+    // 1. Total Votes
+    const totalVotes = await Mood.countDocuments({ date: today });
+
+    // Helper to get top districts by mood (handling ties)
+    const getTopDistrictByCondition = async (condition) => {
+        const result = await Mood.aggregate([
+            baseMatch,
+            { $match: condition },
+            { $group: { _id: "$districtId", count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
+        if (result.length === 0) return null;
+
+        const maxCount = result[0].count;
+        const topDistricts = result.filter(r => r.count === maxCount).map(r => r._id);
+
+        return { districts: topDistricts, count: maxCount };
+    };
+
+    // Helper for most active (handling ties)
+    const getMostActiveDistrict = async () => {
+        const result = await Mood.aggregate([
+            baseMatch,
+            { $group: { _id: "$districtId", count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
+        if (result.length === 0) return null;
+
+        const maxCount = result[0].count;
+        const topDistricts = result.filter(r => r.count === maxCount).map(r => r._id);
+
+        return { districts: topDistricts, count: maxCount };
+    };
+
+    const happiest = await getTopDistrictByCondition({ mood: 'happy' });
+    const excited = await getTopDistrictByCondition({ mood: 'excited' });
+    const neutral = await getTopDistrictByCondition({ mood: 'neutral' });
+    const sad = await getTopDistrictByCondition({ mood: 'sad' });
+    const angriest = await getTopDistrictByCondition({ mood: 'angry' });
+    const mostActive = await getMostActiveDistrict();
+
+    return {
+        totalVotes,
+        happiest,
+        excited,
+        neutral,
+        sad,
+        angriest,
+        mostActive
+    };
+};
