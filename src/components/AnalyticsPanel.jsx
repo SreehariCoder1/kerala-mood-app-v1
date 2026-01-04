@@ -41,69 +41,69 @@ const AnalyticsPanel = () => {
     );
 
     const StatRow = ({ title, value, subtext, icon, color }) => (
-        <div className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-            <div className="flex items-center space-x-3 shrink-0">
-                <span className="text-xl">{icon}</span>
+        <div className="flex items-center justify-between p-2 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+            <div className="flex items-center space-x-2 shrink-0">
+                <span className="text-base">{icon}</span>
                 <div>
-                    <p className={`text-xs font-bold uppercase tracking-wider ${color}`}>{title}</p>
-                    {subtext && <p className="text-[10px] text-slate-500">{subtext}</p>}
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${color}`}>{title}</p>
+                    {subtext && <p className="text-[9px] text-slate-500 leading-none">{subtext}</p>}
                 </div>
             </div>
             <div className="text-right max-w-[50%]">
-                <p className="text-white font-bold text-sm leading-tight break-words">{value}</p>
+                <p className="text-white font-bold text-xs leading-tight break-words">{value}</p>
             </div>
         </div>
     );
 
     return (
-        <div className="w-64">
+        <div className="w-full">
             <StatRow
-                title="Total Votes"
+                title="Votes"
                 value={stats.totalVotes}
                 icon="🗳️"
                 color="text-blue-400"
-                subtext="Today's total"
+                subtext="Today"
             />
-            <div className="my-2 border-t border-white/10 mx-2"></div>
+            <div className="my-1 border-t border-white/10 mx-2"></div>
             <StatRow
-                title="Most Active"
+                title="Active"
                 value={formatDistricts(stats.mostActive?.districts)}
-                subtext={stats.mostActive ? `${stats.mostActive.count} votes` : ''}
+                subtext={stats.mostActive ? `${stats.mostActive.count}` : ''}
                 icon="⚡"
                 color="text-purple-400"
             />
             <StatRow
                 title="Happiest"
                 value={formatDistricts(stats.happiest?.districts)}
-                subtext={stats.happiest ? `${stats.happiest.count} votes` : ''}
+                subtext={stats.happiest ? `${stats.happiest.count}` : ''}
                 icon="😊"
                 color="text-yellow-400"
             />
             <StatRow
                 title="Excited"
                 value={formatDistricts(stats.excited?.districts)}
-                subtext={stats.excited ? `${stats.excited.count} votes` : ''}
+                subtext={stats.excited ? `${stats.excited.count}` : ''}
                 icon="🤩"
                 color="text-pink-400"
             />
             <StatRow
                 title="Neutral"
                 value={formatDistricts(stats.neutral?.districts)}
-                subtext={stats.neutral ? `${stats.neutral.count} votes` : ''}
+                subtext={stats.neutral ? `${stats.neutral.count}` : ''}
                 icon="😐"
                 color="text-slate-400"
             />
             <StatRow
                 title="Sad"
                 value={formatDistricts(stats.sad?.districts)}
-                subtext={stats.sad ? `${stats.sad.count} votes` : ''}
+                subtext={stats.sad ? `${stats.sad.count}` : ''}
                 icon="😢"
                 color="text-blue-300"
             />
             <StatRow
                 title="Angriest"
                 value={formatDistricts(stats.angriest?.districts)}
-                subtext={stats.angriest ? `${stats.angriest.count} votes` : ''}
+                subtext={stats.angriest ? `${stats.angriest.count}` : ''}
                 icon="😡"
                 color="text-red-500"
             />

@@ -121,3 +121,86 @@ export const getMoodStats = async () => {
         mostActive
     };
 };
+
+export const getMoodHistory = async () => {
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 6);
+
+    // Convert to YYYY-MM-DD
+    const startDate = sevenDaysAgo.toISOString().split('T')[0];
+    const endDate = today.toISOString().split('T')[0];
+
+    // Aggregate daily mood counts
+    const history = await Mood.aggregate([
+        {
+            $match: {
+                date: { $gte: startDate, $lte: endDate }
+            }
+        },
+        {
+            $group: {
+                _id: { date: "$date", mood: "$mood" },
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $group: {
+                _id: "$_id.date",
+                moods: {
+                    $push: {
+                        k: "$_id.mood",
+                        v: "$count"
+                    }
+                },
+                totalVotes: { $sum: "$count" }
+            }
+        },
+        {
+            $sort: { _id: 1 }
+        },
+        {
+            $project: {
+                _id: 0,
+                date: "$_id",
+                moods: { $arrayToObject: "$moods" },
+                totalVotes: 1
+            }
+        }
+    ]);
+
+    // Fill in missing dates with zero data
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(sevenDaysAgo);
+        d.setDate(sevenDaysAgo.getDate() + i);
+        const dateStr = d.toISOString().split('T')[0];
+
+        const existing = history.find(h => h.date === dateStr);
+        if (existing) {
+            result.push({
+                date: dateStr,
+                happy: existing.moods.happy || 0,
+                excited: existing.moods.excited || 0,
+                neutral: existing.moods.neutral || 0,
+                sad: existing.moods.sad || 0,
+                angry: existing.moods.angry || 0,
+                totalVotes: existing.totalVotes,
+                displayDate: d.toLocaleDateString('en-US', { weekday: 'short' }) // Mon, Tue
+            });
+        } else {
+            result.push({
+                date: dateStr,
+                happy: 0,
+                excited: 0,
+                neutral: 0,
+                sad: 0,
+                angry: 0,
+                totalVotes: 0,
+                displayDate: d.toLocaleDateString('en-US', { weekday: 'short' })
+            });
+        }
+    }
+
+    return result;
+};

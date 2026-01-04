@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { districts, moodColors } from '../data/districts';
 import MoodSelector from './MoodSelector';
 import AnalyticsPanel from './AnalyticsPanel';
+import MoodTrendsPanel from './MoodTrendsPanel';
 import DistrictStatsDropdown from './DistrictStatsDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,8 @@ const DistrictMap = () => {
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [isMoodSelectorOpen, setIsMoodSelectorOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [showTrends, setShowTrends] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
     const [loading, setLoading] = useState(true);
@@ -176,57 +179,111 @@ const DistrictMap = () => {
                 districtName={selectedDistrict?.name}
             />
 
-            {/* Analytics Dropdown - Positioned below header on right */}
-            <div className="fixed z-50 top-[140px] right-2 min-[600px]:top-20 min-[600px]:right-6">
-                <div className="flex justify-end mb-2">
-                    <button
-                        onClick={() => setShowAnalytics(!showAnalytics)}
-                        className={`
-                            transition-all duration-300 flex items-center justify-center
-                            min-[600px]:bg-indigo-600/90 min-[600px]:hover:bg-indigo-500
-                            min-[600px]:text-white min-[600px]:shadow-lg min-[600px]:shadow-indigo-500/30
-                            min-[600px]:py-2 min-[600px]:px-4 min-[600px]:rounded-full
-                            min-[600px]:border min-[600px]:border-indigo-400/30
-                            min-[600px]:hover:scale-105 min-[600px]:backdrop-blur-md
-                            min-[600px]:space-x-2
-                            
-                            /* Mobile Styles (<600px) */
-                            max-[599px]:w-10 max-[599px]:h-10 max-[599px]:rounded-full
-                            max-[599px]:bg-indigo-500/20 max-[599px]:border max-[599px]:border-indigo-400/50
-                            max-[599px]:shadow-[0_0_15px_rgba(99,102,241,0.6)]
-                            max-[599px]:animate-pulse
-                        `}
+            {/* Top Right Menu & Dropdown */}
+            <div className="fixed top-[60px] right-6 z-50 flex flex-col items-end">
+
+                {/* Glowing Downward Arrow Button */}
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="group relative flex items-center justify-center p-2 transition-all duration-300 animate-pulse hover:animate-none"
+                    aria-label="Menu"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`h-5 w-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-transform duration-300 ${isMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                     >
-                        {/* Desktop Content */}
-                        <span className="hidden min-[600px]:inline font-semibold">Stats</span>
-                        <span className="hidden min-[600px]:inline text-lg">📊</span>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
 
-                        {/* Mobile Content: Down Arrow SVG */}
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400 min-[600px]:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                </div>
-
+                {/* Slide Down Menu */}
                 <AnimatePresence>
-                    {showAnalytics && (
+                    {isMenuOpen && (
                         <motion.div
-                            initial={{ y: -10, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: -10, opacity: 0 }}
-                            className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl overflow-hidden max-h-[calc(100vh-180px)] min-[600px]:max-h-[calc(100vh-120px)] overflow-y-auto pb-4"
+                            initial={{ y: -10, opacity: 0, scale: 0.95 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            exit={{ y: -10, opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                            className="mt-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden w-32 origin-top-right"
                         >
-                            <div className="bg-slate-800/50 px-4 py-3 border-b border-white/5 flex justify-between items-center">
-                                <h3 className="font-bold text-white text-sm">Leaderboard</h3>
-                                <button onClick={() => setShowAnalytics(false)} className="text-slate-400 hover:text-white">
-                                    X
+                            <div className="flex flex-col p-1 space-y-0.5">
+                                <button
+                                    onClick={() => {
+                                        setShowAnalytics(true);
+                                        setShowTrends(false);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-indigo-500/20 transition-colors group"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">📊</span>
+                                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Stats</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowTrends(true);
+                                        setShowAnalytics(false);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-emerald-500/20 transition-colors group"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">📈</span>
+                                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Trends</span>
                                 </button>
                             </div>
-                            <AnalyticsPanel />
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Panels Container (Centered/Fixed Position) */}
+            <AnimatePresence>
+                {/* Analytics / Leaderboard Panel */}
+                {showAnalytics && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="fixed top-[60px] right-14 z-40"
+                    >
+                        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto w-56">
+                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                                <h3 className="font-bold text-white text-xs">Leaderboard</h3>
+                                <button onClick={() => setShowAnalytics(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <AnalyticsPanel />
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Trends Panel */}
+                {showTrends && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="fixed top-[60px] right-14 z-40 max-w-[90vw] md:w-[800px]"
+                    >
+                        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
+                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                                <h3 className="font-bold text-white text-xs">Mood Trends</h3>
+                                <button onClick={() => setShowTrends(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <MoodTrendsPanel />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </div>
     );
