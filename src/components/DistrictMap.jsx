@@ -24,6 +24,8 @@ const DistrictMap = () => {
     const [showTrends, setShowTrends] = useState(false);
     const [showReasons, setShowReasons] = useState(false);
     const [isReasonsFullScreen, setIsReasonsFullScreen] = useState(false);
+    const [isAnalyticsFullScreen, setIsAnalyticsFullScreen] = useState(false);
+    const [isTrendsFullScreen, setIsTrendsFullScreen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
@@ -264,18 +266,46 @@ const DistrictMap = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
-                        className="fixed top-[60px] right-14 z-40"
+                        className={`fixed z-50 transition-all duration-300 ${isAnalyticsFullScreen
+                            ? "inset-0 top-0 left-0 w-full h-full"
+                            : "top-[60px] right-14 max-h-[70vh] w-56"
+                            }`}
                     >
-                        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto w-56">
-                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                        <div className={`bg-slate-900/95 backdrop-blur-xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${isAnalyticsFullScreen
+                            ? "w-full h-full rounded-none"
+                            : "h-full rounded-xl"
+                            }`}>
+                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center bg-slate-900/95 backdrop-blur shrink-0">
                                 <h3 className="font-bold text-white text-xs">Leaderboard</h3>
-                                <button onClick={() => setShowAnalytics(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <div className="flex items-center space-x-1">
+                                    <button
+                                        onClick={() => setIsAnalyticsFullScreen(!isAnalyticsFullScreen)}
+                                        className={`p-1.5 rounded-lg transition-all border ${isAnalyticsFullScreen
+                                            ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/30"
+                                            : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
+                                            }`}
+                                        title={isAnalyticsFullScreen ? "Minimize" : "Maximize"}
+                                    >
+                                        {isAnalyticsFullScreen ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 14h6v6M20 10h-6V4" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M20 16v4m0 0h-4" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                    <button onClick={() => setShowAnalytics(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <AnalyticsPanel />
+                            <div className="flex-1 overflow-y-auto">
+                                <AnalyticsPanel />
+                            </div>
                         </div>
                     </motion.div>
                 )}
@@ -286,18 +316,46 @@ const DistrictMap = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
-                        className="fixed top-[60px] right-14 z-40 max-w-[90vw] md:w-[800px]"
+                        className={`fixed z-50 transition-all duration-300 ${isTrendsFullScreen
+                            ? "inset-0 top-0 left-0 w-full h-full"
+                            : "top-[60px] right-14 max-w-[90vw] md:w-[800px] max-h-[70vh]"
+                            }`}
                     >
-                        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
-                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+                        <div className={`bg-slate-900/95 backdrop-blur-xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${isTrendsFullScreen
+                            ? "w-full h-full rounded-none"
+                            : "h-full rounded-xl"
+                            }`}>
+                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center bg-slate-900/95 backdrop-blur shrink-0">
                                 <h3 className="font-bold text-white text-xs">Mood Trends</h3>
-                                <button onClick={() => setShowTrends(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <div className="flex items-center space-x-1">
+                                    <button
+                                        onClick={() => setIsTrendsFullScreen(!isTrendsFullScreen)}
+                                        className={`p-1.5 rounded-lg transition-all border ${isTrendsFullScreen
+                                            ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/30"
+                                            : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
+                                            }`}
+                                        title={isTrendsFullScreen ? "Minimize" : "Maximize"}
+                                    >
+                                        {isTrendsFullScreen ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 14h6v6M20 10h-6V4" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M20 16v4m0 0h-4" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                    <button onClick={() => setShowTrends(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <MoodTrendsPanel />
+                            <div className="flex-1 overflow-y-auto">
+                                <MoodTrendsPanel />
+                            </div>
                         </div>
                     </motion.div>
                 )}

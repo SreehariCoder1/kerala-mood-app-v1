@@ -78,11 +78,13 @@ const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
                         </div>
 
                         <div className="mb-4 space-y-2">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Why? (Required)</label>
+                            <label htmlFor="reason" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Why? (Required)</label>
                             <motion.div
                                 className="relative rounded-xl bg-slate-950/30 border border-white/10 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all overflow-hidden"
                             >
                                 <textarea
+                                    id="reason"
+                                    name="reason"
                                     value={reason}
                                     onChange={(e) => setReason(e.target.value)}
                                     placeholder="Share your thoughts..."
@@ -106,8 +108,8 @@ const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
                                 onClick={handleSubmit}
                                 disabled={!selectedMoodId || !reason.trim()}
                                 className={`flex-[2] py-3 rounded-xl font-bold shadow-lg transition-all text-sm ${selectedMoodId && reason.trim()
-                                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5'
-                                        : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
+                                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5'
+                                    : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
                                     }`}
                             >
                                 Submit Mood
