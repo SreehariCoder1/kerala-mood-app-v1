@@ -4,15 +4,18 @@ const getTodayDateString = () => {
     return new Date().toISOString().split('T')[0];
 };
 
-export const upsertMood = async (userId, districtId, mood) => {
+export const upsertMood = async (userId, districtId, mood, reason = null) => {
     // ONE VOTE PER USER PER DAY
     // We strictly scope this to the current date string (YYYY-MM-DD).
     const today = getTodayDateString();
 
+    const updateData = { districtId, mood, timestamp: new Date() };
+    if (reason) updateData.reason = reason;
+
     return await Mood.findOneAndUpdate(
         { userId, date: today },
         {
-            $set: { districtId, mood, timestamp: new Date() }
+            $set: updateData
         },
         { upsert: true, new: true }
     );
@@ -203,4 +206,15 @@ export const getMoodHistory = async () => {
     }
 
     return result;
+};
+
+export const getMoodReasons = async () => {
+    const today = getTodayDateString();
+    return await Mood.find({
+        date: today,
+        reason: { $exists: true, $ne: "" }
+    })
+        .sort({ timestamp: -1 })
+        .limit(100)
+        .select('mood districtId reason timestamp');
 };

@@ -14,6 +14,11 @@ const moodSchema = new mongoose.Schema({
         type: String, // 'happy', 'sad', etc.
         required: true
     },
+    reason: {
+        type: String,
+        maxLength: 280,
+        required: true
+    },
     timestamp: {
         type: Date,
         default: Date.now

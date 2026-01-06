@@ -4,6 +4,7 @@ import { districts, moodColors } from '../data/districts';
 import MoodSelector from './MoodSelector';
 import AnalyticsPanel from './AnalyticsPanel';
 import MoodTrendsPanel from './MoodTrendsPanel';
+import MoodReasonsPanel from './MoodReasonsPanel';
 import DistrictStatsDropdown from './DistrictStatsDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +22,7 @@ const DistrictMap = () => {
     const [isMoodSelectorOpen, setIsMoodSelectorOpen] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [showTrends, setShowTrends] = useState(false);
+    const [showReasons, setShowReasons] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
@@ -48,13 +50,14 @@ const DistrictMap = () => {
         setIsMoodSelectorOpen(true);
     };
 
-    const handleMoodSubmit = async (moodId) => {
+    const handleMoodSubmit = async (moodId, reason) => {
         if (!user || !selectedDistrict) return;
 
         try {
             await axios.post(`${config.API_URL}/moods`, {
                 districtId: selectedDistrict.id,
-                mood: moodId
+                mood: moodId,
+                reason: reason
             });
 
             // Refresh moods immediately
@@ -214,6 +217,7 @@ const DistrictMap = () => {
                                     onClick={() => {
                                         setShowAnalytics(true);
                                         setShowTrends(false);
+                                        setShowReasons(false);
                                         setIsMenuOpen(false);
                                     }}
                                     className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-indigo-500/20 transition-colors group"
@@ -225,12 +229,25 @@ const DistrictMap = () => {
                                     onClick={() => {
                                         setShowTrends(true);
                                         setShowAnalytics(false);
+                                        setShowReasons(false);
                                         setIsMenuOpen(false);
                                     }}
                                     className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-emerald-500/20 transition-colors group"
                                 >
                                     <span className="text-base group-hover:scale-110 transition-transform">📈</span>
                                     <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Trends</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowReasons(true);
+                                        setShowAnalytics(false);
+                                        setShowTrends(false);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-pink-500/20 transition-colors group"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">💬</span>
+                                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Feed</span>
                                 </button>
                             </div>
                         </motion.div>
@@ -283,9 +300,33 @@ const DistrictMap = () => {
                         </div>
                     </motion.div>
                 )}
+
+                {/* Reasons Panel (Feed) */}
+                {showReasons && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="fixed top-[60px] right-14 z-40"
+                    >
+                        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden h-[70vh] w-80 flex flex-col">
+                            <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center bg-slate-900/95 backdrop-blur shrink-0">
+                                <h3 className="font-bold text-white text-xs">Live Feed</h3>
+                                <button onClick={() => setShowReasons(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-hidden relative">
+                                <MoodReasonsPanel />
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
-        </div>
+        </div >
     );
 }
 

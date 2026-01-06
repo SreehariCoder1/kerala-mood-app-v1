@@ -1,12 +1,12 @@
-import { upsertMood, aggregateDistrictMoods, getMoodStats as getMoodStatsRepo, getMoodHistory as getMoodHistoryRepo } from '../repositories/mood.js';
+import { upsertMood, aggregateDistrictMoods, getMoodStats as getMoodStatsRepo, getMoodHistory as getMoodHistoryRepo, getMoodReasons as getMoodReasonsRepo } from '../repositories/mood.js';
 
 export const submitMood = async (req, res) => {
     // userId from Protected Middleware (Safe!)
-    const { districtId, mood } = req.body;
+    const { districtId, mood, reason } = req.body;
     const userId = req.user._id;
 
     try {
-        const newMood = await upsertMood(userId, districtId, mood);
+        const newMood = await upsertMood(userId, districtId, mood, reason);
         res.status(200).json(newMood);
     } catch (error) {
         console.error("Error submitting mood:", error);
@@ -40,5 +40,14 @@ export const getMoodHistory = async (req, res) => {
     } catch (error) {
         console.error("Error fetching mood history:", error);
         res.status(500).json({ message: "Error fetching mood history", error });
+    }
+};
+
+export const getMoodReasons = async (req, res) => {
+    try {
+        const reasons = await getMoodReasonsRepo();
+        res.status(200).json(reasons);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching reasons", error });
     }
 };
