@@ -50,8 +50,8 @@ const MoodReasonsPanel = () => {
                         key={m.id}
                         onClick={() => setFilter(m.id)}
                         className={`flex items-center space-x-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 border ${filter === m.id
-                                ? 'bg-white text-slate-900 border-white'
-                                : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200'
+                            ? 'bg-white text-slate-900 border-white'
+                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700 hover:text-slate-200'
                             }`}
                     >
                         <span>{m.emoji}</span>

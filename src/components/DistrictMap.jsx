@@ -23,6 +23,7 @@ const DistrictMap = () => {
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [showTrends, setShowTrends] = useState(false);
     const [showReasons, setShowReasons] = useState(false);
+    const [isReasonsFullScreen, setIsReasonsFullScreen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
@@ -307,16 +308,42 @@ const DistrictMap = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
-                        className="fixed top-[60px] right-14 z-40"
+                        className={`fixed z-50 transition-all duration-300 ${isReasonsFullScreen
+                            ? "inset-0 top-0 left-0 w-full h-full"
+                            : "top-[60px] right-4 md:right-14 max-w-[calc(100vw-2rem)]"
+                            }`}
                     >
-                        <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl overflow-hidden h-[70vh] w-80 flex flex-col">
+                        <div className={`bg-slate-900/95 backdrop-blur-xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${isReasonsFullScreen
+                            ? "w-full h-full rounded-none"
+                            : "h-[70vh] w-80 rounded-xl"
+                            }`}>
                             <div className="bg-slate-800/50 px-3 py-2 border-b border-white/5 flex justify-between items-center bg-slate-900/95 backdrop-blur shrink-0">
                                 <h3 className="font-bold text-white text-xs">Live Feed</h3>
-                                <button onClick={() => setShowReasons(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
+                                <div className="flex items-center space-x-1">
+                                    <button
+                                        onClick={() => setIsReasonsFullScreen(!isReasonsFullScreen)}
+                                        className={`p-1.5 rounded-lg transition-all border ${isReasonsFullScreen
+                                            ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/30"
+                                            : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500"
+                                            }`}
+                                        title={isReasonsFullScreen ? "Minimize" : "Maximize"}
+                                    >
+                                        {isReasonsFullScreen ? (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 14h6v6M20 10h-6V4" />
+                                            </svg>
+                                        ) : (
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M20 16v4m0 0h-4" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                    <button onClick={() => setShowReasons(false)} className="text-slate-400 hover:text-white hover:bg-white/10 rounded p-0.5 transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                             <div className="flex-1 overflow-hidden relative">
                                 <MoodReasonsPanel />
