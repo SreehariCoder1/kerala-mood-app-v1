@@ -55,9 +55,13 @@ export const aggregateDistrictMoods = async () => {
 
     const result = {};
     moodStats.forEach(stat => {
+        const maxCount = Math.max(...stat.moods.map(m => m.count));
+        const topMoods = stat.moods.filter(m => m.count === maxCount).map(m => m.mood);
+
         result[stat._id] = {
-            mood: stat.dominantMood,
-            count: stat.moods.find(m => m.mood === stat.dominantMood)?.count || 0,
+            mood: topMoods[0], // Keep for backward compatibility/primary display
+            topMoods: topMoods, // New field for ties
+            count: maxCount,
             totalVotes: stat.totalVotes,
             moods: stat.moods
         };

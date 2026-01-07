@@ -142,14 +142,37 @@ const DistrictMap = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {districts.map((district) => {
                         const districtData = districtMoods[district.id] || {};
-                        const currentMood = districtData.mood || 'default';
+                        const topMoods = districtData.topMoods && districtData.topMoods.length > 0
+                            ? districtData.topMoods
+                            : (districtData.mood ? [districtData.mood] : ['default']);
+
+                        const currentMood = topMoods[0]; // Primary mood for styling
                         const voteCount = districtData.count || 0;
                         const colorClass = moodColors[currentMood] || moodColors['default'];
 
-                        // Emoji mapping for display
-                        const moodEmoji = {
+                        // Color mapping for gradients (using RGBA to match bg-opacity-90)
+                        const moodColorCodes = {
+                            happy: 'rgba(250, 204, 21, 0.9)',   // yellow-400
+                            sad: 'rgba(37, 99, 235, 0.9)',      // blue-600
+                            angry: 'rgba(239, 68, 68, 0.9)',    // red-500
+                            excited: 'rgba(236, 72, 153, 0.9)', // pink-500
+                            neutral: 'rgba(156, 163, 175, 0.9)',// gray-400
+                            default: 'rgba(51, 65, 85, 0.9)'    // slate-700
+                        };
+
+                        const isTie = topMoods.length > 1;
+                        let cardStyle = {};
+                        let finalColorClass = colorClass;
+
+                        if (isTie) {
+                            const gradientColors = topMoods.map(m => moodColorCodes[m] || moodColorCodes['default']).join(', ');
+                            cardStyle = { background: `linear-gradient(135deg, ${gradientColors})` };
+                            finalColorClass = ''; // Remove single color class to let gradient take over
+                        }
+
+                        const moodEmojiMap = {
                             happy: '😊', excited: '🤩', neutral: '😐', sad: '😢', angry: '😡', default: '📍'
-                        }[currentMood];
+                        };
 
                         return (
                             <motion.div
@@ -157,7 +180,8 @@ const DistrictMap = () => {
                                 onClick={() => handleDistrictClick(district)}
                                 whileHover={{ scale: 1.05, y: -5 }}
                                 whileTap={{ scale: 0.95 }}
-                                className={`${colorClass} p-3 md:p-6 rounded-2xl shadow-lg cursor-pointer backdrop-blur-md bg-opacity-90 border border-white/10 flex flex-col items-center justify-center text-center transition-all duration-500 hover:shadow-2xl h-40 relative overflow-visible group ${openDropdownId === district.id ? 'z-50' : 'z-0 hover:z-40'}`}
+                                style={cardStyle}
+                                className={`${finalColorClass} p-3 md:p-6 rounded-2xl shadow-lg cursor-pointer backdrop-blur-md bg-opacity-90 border border-white/10 flex flex-col items-center justify-center text-center transition-all duration-500 hover:shadow-2xl h-40 relative overflow-visible group ${openDropdownId === district.id ? 'z-50' : 'z-0 hover:z-40'}`}
                             >
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
 
@@ -184,9 +208,15 @@ const DistrictMap = () => {
                                 />
 
                                 <h3 className="text-white font-bold text-sm md:text-lg drop-shadow-md z-10 break-words w-full px-1">{district.name}</h3>
-                                <span className="text-3xl mt-2 filter drop-shadow-lg z-10 transition-transform group-hover:scale-110">
-                                    {moodEmoji}
-                                </span>
+
+                                <div className="flex justify-center items-center space-x-1 max-[500px]:space-x-0.5 mt-2 z-10 flex-wrap">
+                                    {topMoods.map((mood, index) => (
+                                        <span key={`${district.id}-${mood}-${index}`} className="text-3xl max-[500px]:text-lg filter drop-shadow-lg transition-transform group-hover:scale-110">
+                                            {moodEmojiMap[mood] || moodEmojiMap['default']}
+                                        </span>
+                                    ))}
+                                </div>
+
                                 <div className="mt-2 text-xs font-semibold text-white/80 bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
                                     {voteCount} votes
                                 </div>
