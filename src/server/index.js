@@ -15,7 +15,7 @@ const httpServer = createServer(app);
 // Allow requests from the frontend
 const io = new Server(httpServer, {
     cors: {
-        origin: ["http://localhost:5173", "http://127.0.0.1:5173"], // Add your frontend URL
+        origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://kerala-mood-app-v1.vercel.app"], // Add your frontend URL
         methods: ["GET", "POST"]
     }
 });
@@ -51,18 +51,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Emit a notification every 15 seconds (DISABLED: Using real-time submissions now)
-// setInterval(() => {
-//     const moods = ["Happy", "Sad", "Excited", "Angry", "Neutral"];
-//     const randomMood = moods[Math.floor(Math.random() * moods.length)];
-//     const message = `Someone just reported feeling ${randomMood}!`;
-//
-//     io.emit('mood_update', {
-//         message: message,
-//         mood: randomMood,
-//         timestamp: new Date().toISOString()
-//     });
-// }, 15000);
 
 const PORT = process.env.PORT || 5000;
 
