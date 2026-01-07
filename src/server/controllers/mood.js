@@ -7,6 +7,23 @@ export const submitMood = async (req, res) => {
 
     try {
         const newMood = await upsertMood(userId, districtId, mood, reason);
+
+        // Emit real-time notification
+        if (req.io) {
+            // const message = reason
+            //     ? `Someone in ${districtId} is feeling ${mood}: "${reason}"`
+            //     : `Someone in ${districtId} just reported feeling ${mood}!`;
+
+            req.io.emit('mood_update', {
+                _id: newMood._id, // Pass ID for linking
+                // message: message,
+                mood: mood,
+                reason: reason,
+                districtId: districtId,
+                timestamp: new Date().toISOString()
+            });
+        }
+
         res.status(200).json(newMood);
     } catch (error) {
         console.error("Error submitting mood:", error);

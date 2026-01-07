@@ -30,12 +30,31 @@ const DistrictMap = () => {
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
     const [loading, setLoading] = useState(true);
+    const [highlightedReasonId, setHighlightedReasonId] = useState(null);
 
     // Fetch moods on mount and poll every 30s
     useEffect(() => {
         fetchMoods();
         const interval = setInterval(fetchMoods, 30000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Listen for notification clicks to open reasons panel
+    useEffect(() => {
+        const handleOpenReason = (e) => {
+            const { id } = e.detail;
+            setHighlightedReasonId(id);
+            setShowReasons(true);
+            setShowAnalytics(false);
+            setShowTrends(false);
+            setIsMenuOpen(false);
+
+            // If on mobile, maybe make it fullscreen?
+            // For now keep default behavior
+        };
+
+        window.addEventListener('OPEN_MOOD_REASON', handleOpenReason);
+        return () => window.removeEventListener('OPEN_MOOD_REASON', handleOpenReason);
     }, []);
 
     const fetchMoods = async () => {
@@ -404,7 +423,7 @@ const DistrictMap = () => {
                                 </div>
                             </div>
                             <div className="flex-1 overflow-hidden relative">
-                                <MoodReasonsPanel />
+                                <MoodReasonsPanel highlightedId={highlightedReasonId} />
                             </div>
                         </div>
                     </motion.div>

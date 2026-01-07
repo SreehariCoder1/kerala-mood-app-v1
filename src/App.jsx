@@ -1,6 +1,7 @@
 import React from 'react'
 import Login from './components/Login'
 import DistrictMap from './components/DistrictMap'
+import MoodNotification from './components/MoodNotification'
 
 
 
@@ -20,6 +21,7 @@ const App = () => {
   return (
     <AuthProvider>
       <Toaster position="top-center" reverseOrder={false} />
+      <MoodNotification />
       <Router>
         <Routes>
           <Route path="/" element={<LoginWrapper />} />

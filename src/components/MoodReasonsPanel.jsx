@@ -13,7 +13,7 @@ const moods = [
     { id: 'angry', label: 'Angry', emoji: '😡' },
 ];
 
-const MoodReasonsPanel = () => {
+const MoodReasonsPanel = ({ highlightedId }) => {
     const [reasons, setReasons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
@@ -23,8 +23,10 @@ const MoodReasonsPanel = () => {
         try {
             const res = await axios.get(`${config.API_URL}/moods/reasons`);
             setReasons(res.data);
+            return res.data; // Return for chaining
         } catch (error) {
             console.error("Failed to fetch reasons", error);
+            return [];
         } finally {
             setLoading(false);
         }
@@ -35,6 +37,46 @@ const MoodReasonsPanel = () => {
         const interval = setInterval(fetchReasons, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    // Handle Scrolling to Highlighted Item
+    useEffect(() => {
+        if (!highlightedId) return;
+
+        const scrollToItem = () => {
+            const element = document.getElementById(`reason-${highlightedId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Add a temporary highlight class
+                element.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-500/10');
+                setTimeout(() => {
+                    element.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-500/10');
+                }, 3000);
+            }
+        };
+
+        // Check if item exists, if not fetch (likely new submission)
+        const itemExists = reasons.find(r => r._id === highlightedId);
+
+        if (itemExists) {
+            // Wait a tick for render (if filter was just cleared?)
+            // Actually, if filter is preventing it, we should clear filter
+            if (filter !== 'all' && itemExists.mood !== filter) {
+                setFilter('all');
+                setTimeout(scrollToItem, 100);
+            } else {
+                setTimeout(scrollToItem, 100);
+            }
+        } else {
+            // Not found, maybe new? Fetch and then try
+            fetchReasons().then((newReasons) => {
+                const found = newReasons?.find(r => r._id === highlightedId);
+                if (found) {
+                    setFilter('all'); // Ensure visible
+                    setTimeout(scrollToItem, 300); // Wait for render
+                }
+            });
+        }
+    }, [highlightedId]);
 
     const filteredReasons = filter === 'all'
         ? reasons
@@ -74,11 +116,12 @@ const MoodReasonsPanel = () => {
                             const moodObj = moods.find(m => m.id === reason.mood);
                             return (
                                 <motion.div
-                                    key={reason._id || Math.random()} // Fallback key if _id missing
+                                    id={`reason-${reason._id}`} // ID for scrolling
+                                    key={reason._id || Math.random()}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="bg-slate-800/50 border border-white/5 p-3 rounded-xl hover:bg-slate-800 transition-colors"
+                                    className={`bg-slate-800/50 border border-white/5 p-3 rounded-xl hover:bg-slate-800 transition-colors ${highlightedId === reason._id ? 'bg-indigo-500/10 border-indigo-500/50' : ''}`}
                                 >
                                     <div className="flex justify-between items-start mb-1">
                                         <div className="flex items-center space-x-2">
