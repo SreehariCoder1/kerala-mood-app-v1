@@ -62,9 +62,6 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Only listen if NOT running in Vercel (local development)
-if (process.env.NODE_ENV !== 'production') {
-    httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
+httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 export default app;
