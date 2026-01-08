@@ -15,13 +15,21 @@ const httpServer = createServer(app);
 // Allow requests from the frontend
 const io = new Server(httpServer, {
     cors: {
-        origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://kerala-mood-app-v1.vercel.app"], // Add your frontend URL
-        methods: ["GET", "POST"]
+        origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://kerala-mood-app-v1.vercel.app"],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
 app.use(express.json());
-app.use(cors());
+
+const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173", "https://kerala-mood-app-v1.vercel.app"];
+
+app.use(cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+}));
 
 // Attach Socket.io to req
 app.use((req, res, next) => {
