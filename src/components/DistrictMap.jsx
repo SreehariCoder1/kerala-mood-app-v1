@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { io } from 'socket.io-client';
 import { districts, moodColors } from '../data/districts';
 import MoodSelector from './MoodSelector';
 import AnalyticsPanel from './AnalyticsPanel';
@@ -32,12 +33,38 @@ const DistrictMap = () => {
     const [districtMoods, setDistrictMoods] = useState({}); // { districtId: { mood: 'happy', count: 10 } }
     const [loading, setLoading] = useState(true);
     const [highlightedReasonId, setHighlightedReasonId] = useState(null);
+    const [activeDistricts, setActiveDistricts] = useState([]); // Track districts with live updates
 
     // Fetch moods on mount and poll every 30s
     useEffect(() => {
         fetchMoods();
         const interval = setInterval(fetchMoods, 30000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Socket connection for live active status
+    useEffect(() => {
+        const socketUrl = config.API_URL.replace('/api', '');
+        const socket = io(socketUrl);
+
+        socket.on('mood_update', (data) => {
+            if (data?.districtId) {
+                setActiveDistricts(prev => [...prev, data.districtId]);
+                setTimeout(() => {
+                    setActiveDistricts(prev => {
+                        const idx = prev.indexOf(data.districtId);
+                        if (idx > -1) {
+                            const newArr = [...prev];
+                            newArr.splice(idx, 1);
+                            return newArr;
+                        }
+                        return prev;
+                    });
+                }, 3000);
+            }
+        });
+
+        return () => socket.disconnect();
     }, []);
 
     // Listen for notification clicks to open reasons panel
@@ -203,6 +230,16 @@ const DistrictMap = () => {
                                         </svg>
                                     </button>
                                 </div>
+
+                                {/* Live Pulse Indicator */}
+                                {activeDistricts.includes(district.id) && (
+                                    <div className="absolute top-2 left-2 z-30">
+                                        <span className="relative flex h-3 w-3">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-black"></span>
+                                        </span>
+                                    </div>
+                                )}
 
                                 {/* Stats Dropdown Component */}
                                 <DistrictStatsDropdown
