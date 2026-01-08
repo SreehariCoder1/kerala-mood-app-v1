@@ -20,6 +20,7 @@ const DistrictMap = () => {
 
     const [selectedDistrict, setSelectedDistrict] = useState(null);
     const [isMoodSelectorOpen, setIsMoodSelectorOpen] = useState(false);
+    const [isSubmittingMood, setIsSubmittingMood] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
     const [showTrends, setShowTrends] = useState(false);
     const [showReasons, setShowReasons] = useState(false);
@@ -75,6 +76,7 @@ const DistrictMap = () => {
     const handleMoodSubmit = async (moodId, reason) => {
         if (!user || !selectedDistrict) return;
 
+        setIsSubmittingMood(true);
         try {
             await axios.post(`${config.API_URL}/moods`, {
                 districtId: selectedDistrict.id,
@@ -91,6 +93,8 @@ const DistrictMap = () => {
             console.error("Failed to submit mood", error);
             playErrorSound();
             toast.error("Failed to submit mood. Please try again.");
+        } finally {
+            setIsSubmittingMood(false);
         }
     };
 
@@ -232,6 +236,7 @@ const DistrictMap = () => {
                 onClose={() => setIsMoodSelectorOpen(false)}
                 onSubmit={handleMoodSubmit}
                 districtName={selectedDistrict?.name}
+                isSubmitting={isSubmittingMood}
             />
 
             {/* Top Right Menu & Dropdown */}

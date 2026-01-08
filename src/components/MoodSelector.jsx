@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MoodSubmissionLoader from './MoodSubmissionLoader';
 
 const moods = [
     { id: 'happy', label: 'Happy', emoji: '😊', color: 'bg-yellow-500/20 border-yellow-500/30' },
@@ -9,7 +10,7 @@ const moods = [
     { id: 'angry', label: 'Angry', emoji: '😡', color: 'bg-red-500/20 border-red-500/30' },
 ];
 
-const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
+const MoodSelector = ({ isOpen, onClose, onSubmit, districtName, isSubmitting }) => {
     const [selectedMoodId, setSelectedMoodId] = useState(null);
     const [reason, setReason] = useState('');
 
@@ -30,14 +31,19 @@ const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={onClose}>
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 p-4" onClick={!isSubmitting ? onClose : undefined}>
+
+                {/* Loading Indicator Above Box */}
+                {/* Loading Indicator Above Box */}
+                <MoodSubmissionLoader isVisible={isSubmitting} />
+
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-slate-900/40 backdrop-blur-xl border border-white/10 p-1 rounded-[2rem] shadow-2xl w-full max-w-xs relative overflow-hidden max-h-[90vh] flex flex-col"
+                    className={`bg-slate-900/40 backdrop-blur-xl border border-white/10 p-1 rounded-[2rem] shadow-2xl w-full max-w-xs relative overflow-hidden max-h-[90vh] flex flex-col transition-all duration-300 ${isSubmitting ? 'grayscale opacity-80 scale-95 pointer-events-none' : ''}`}
                 >
                     {/* Background glow effect */}
                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-indigo-500/10 to-purple-500/5 pointer-events-none" />
@@ -61,13 +67,14 @@ const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    onClick={() => setSelectedMoodId(m.id)}
-                                    whileHover={{ scale: 1.05, y: -2 }}
-                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => !isSubmitting && setSelectedMoodId(m.id)}
+                                    whileHover={!isSubmitting ? { scale: 1.05, y: -2 } : {}}
+                                    whileTap={!isSubmitting ? { scale: 0.95 } : {}}
                                     className={`relative flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 border ${selectedMoodId === m.id
                                         ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.2)]'
                                         : 'bg-slate-800/40 border-white/5 hover:bg-slate-700/40 hover:border-white/10'
-                                        }`}
+                                        } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
+                                    disabled={isSubmitting}
                                 >
                                     <span className="text-3xl mb-1 drop-shadow-md filter">{m.emoji}</span>
                                     <span className={`text-[10px] font-bold tracking-wide transition-colors ${selectedMoodId === m.id ? 'text-white' : 'text-slate-400'}`}>
@@ -90,6 +97,7 @@ const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
                                     placeholder="Share your thoughts..."
                                     className="w-full bg-transparent border-none p-3 text-white placeholder-slate-600 focus:ring-0 resize-none h-16 text-sm leading-relaxed"
                                     maxLength={280}
+                                    disabled={isSubmitting}
                                 />
                                 <div className="absolute bottom-1 right-3 text-[9px] font-medium text-slate-600">
                                     {reason.length}/280
@@ -100,19 +108,20 @@ const MoodSelector = ({ isOpen, onClose, onSubmit, districtName }) => {
                         <div className="flex space-x-2">
                             <button
                                 onClick={onClose}
-                                className="flex-1 py-3 rounded-xl font-bold transition-all bg-transparent text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 text-sm"
+                                disabled={isSubmitting}
+                                className="flex-1 py-3 rounded-xl font-bold transition-all bg-transparent text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                disabled={!selectedMoodId || !reason.trim()}
-                                className={`flex-[2] py-3 rounded-xl font-bold shadow-lg transition-all text-sm ${selectedMoodId && reason.trim()
+                                disabled={!selectedMoodId || !reason.trim() || isSubmitting}
+                                className={`flex-[2] py-3 rounded-xl font-bold shadow-lg transition-all text-sm ${selectedMoodId && reason.trim() && !isSubmitting
                                     ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40 transform hover:-translate-y-0.5'
                                     : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5'
                                     }`}
                             >
-                                Submit Mood
+                                {isSubmitting ? 'Sending...' : 'Submit Mood'}
                             </button>
                         </div>
                     </div>
