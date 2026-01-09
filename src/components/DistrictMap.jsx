@@ -45,6 +45,24 @@ const DistrictMap = () => {
         return () => clearInterval(interval);
     }, []);
 
+    const [showMoodImages, setShowMoodImages] = useState(false);
+
+    // Toggle mood images every 30 seconds for 5 seconds
+    useEffect(() => {
+        const toggleImages = () => {
+            setShowMoodImages(true);
+            setTimeout(() => {
+                setShowMoodImages(false);
+            }, 15000); // Hide after 5 seconds
+        };
+
+        // Initial trigger
+        // toggleImages(); // Optional: trigger immediately on load? user said "every 30 seconds"
+
+        const imageInterval = setInterval(toggleImages, 40000);
+        return () => clearInterval(imageInterval);
+    }, []);
+
     // Socket connection for live active status
     useEffect(() => {
         const socketUrl = config.API_URL.replace('/api', '');
@@ -266,6 +284,26 @@ const DistrictMap = () => {
                                 <div className="mt-2 text-xs font-semibold text-white/80 bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-sm z-10">
                                     {voteCount} votes
                                 </div>
+
+                                {/* Mood Image Overlay */}
+                                <AnimatePresence>
+                                    {showMoodImages && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            transition={{ duration: 2, ease: "easeOut" }}
+                                            className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-2xl"
+                                        >
+                                            <img
+                                                src={`/mood-images/${currentMood}.jpg`}
+                                                onError={(e) => { e.target.src = '/mood-images/default.png'; }}
+                                                alt={currentMood}
+                                                className="w-45 h-45 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]"
+                                            />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </motion.div>
                         );
                     })}
