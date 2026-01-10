@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import userRoutes from './routes/user.js';
 import moodRoutes from './routes/mood.js';
+import { setupGameHandler } from './gameHandler.js';
 
 dotenv.config();
 
@@ -58,6 +59,8 @@ io.on('connection', (socket) => {
         console.log('User disconnected:', socket.id);
     });
 });
+
+setupGameHandler(io);
 
 
 const PORT = process.env.PORT || 5000;

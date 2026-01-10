@@ -2,6 +2,7 @@ import React from 'react'
 import Login from './components/Login'
 import DistrictMap from './components/DistrictMap'
 import MoodNotification from './components/MoodNotification'
+import Game from './components/Game/Game'
 
 
 
@@ -30,6 +31,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <DistrictMap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/game"
+            element={
+              <ProtectedRoute>
+                <Game />
               </ProtectedRoute>
             }
           />

@@ -424,6 +424,13 @@ const DistrictMap = () => {
                                     <span className="text-base group-hover:scale-110 transition-transform">🆚</span>
                                     <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Compare</span>
                                 </button>
+                                <button
+                                    onClick={() => navigate('/game')}
+                                    className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-red-500/20 transition-colors group"
+                                >
+                                    <span className="text-base group-hover:scale-110 transition-transform">🎮</span>
+                                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Play Game</span>
+                                </button>
                                 <a
                                     href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
                                         `Check out Kerala Mood Map! 🌍✨\nSee how Kerala is feeling in real-time.\n${window.location.origin}`
