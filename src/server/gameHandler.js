@@ -387,6 +387,12 @@ export const setupGameHandler = (io) => {
                         vy: (dy / len) * PROJ_SPEED,
                         owner: socket.id
                     });
+
+                    // Broadcast shoot effect
+                    io.to(gameId).emit('game:shoot_effect', {
+                        playerId: socket.id,
+                        type: 'single_shot'
+                    });
                 }
             }
         });

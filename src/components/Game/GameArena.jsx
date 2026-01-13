@@ -183,6 +183,12 @@ class MainScene extends Phaser.Scene {
             if (this.onGameOver) this.onGameOver(data);
         });
 
+        this.socket.on('game:shoot_effect', (data) => {
+            if (data.playerId !== this.playerId) {
+                this.sound.play('single_shot');
+            }
+        });
+
         /* ---------------- INPUT LOOP ---------------- */
         this.time.addEvent({
             delay: 1000 / 30,
@@ -449,6 +455,7 @@ const GameArena = ({ socket, gameId, initialGameState, playerId, onGameOver }) =
         return () => {
             socket.off('game:state');
             socket.off('game:over');
+            socket.off('game:shoot_effect');
             game.destroy(true);
         };
     }, []);
