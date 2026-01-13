@@ -1,13 +1,140 @@
-const TICK_RATE = 30;
-const PLAYER_SPEED = 5;
-const MAP_WIDTH = 800;
-const MAP_HEIGHT = 600;
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const TICK_RATE = 60;
+const ACCELERATION = 1.0;
+const FRICTION = 0.90;
+const MAX_SPEED = 8;
+const MAP_WIDTH = 2048;
+const MAP_HEIGHT = 2048;
 const PLAYER_SIZE = 40;
-const PROJ_SPEED = 10;
+const PROJ_SPEED = 12;
 const PROJ_SIZE = 15;
 
+// // --- COLLISION LOADING ---
+let collisionRects = [];
+
+try {
+    const mapPath = path.resolve(__dirname, '../../public/game/maps/mood_game_map_v1.tmj');
+    if (fs.existsSync(mapPath)) {
+        console.log('Loading map collisions from:', mapPath);
+        const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+
+        const tileWidth = mapData.tilewidth;
+        const tileHeight = mapData.tileheight;
+        const mapWidth = mapData.width;
+
+        // 1. Build a lookup for Tile Collisions: { gid: [ {x,y,w,h}, ... ] }
+        const tileCollisionLookup = {};
+
+        if (mapData.tilesets) {
+            mapData.tilesets.forEach(tileset => {
+                const firstGid = tileset.firstgid;
+                if (tileset.tiles) {
+                    tileset.tiles.forEach(tile => {
+                        const globalId = firstGid + tile.id;
+                        const collisions = [];
+
+                        // Check for ObjectGroup (Tiled Collision Editor)
+                        if (tile.objectgroup && tile.objectgroup.objects) {
+                            tile.objectgroup.objects.forEach(obj => {
+                                collisions.push({
+                                    x: obj.x,
+                                    y: obj.y,
+                                    w: obj.width,
+                                    h: obj.height
+                                });
+                            });
+                        }
+                        // Check for Custom Property "collides"
+                        else if (tile.properties) {
+                            const collidesProp = tile.properties.find(p => p.name === 'collides' && p.value === true);
+                            if (collidesProp) {
+                                // Default to full tile
+                                collisions.push({
+                                    x: 0,
+                                    y: 0,
+                                    w: tileset.tilewidth || tileWidth,
+                                    h: tileset.tileheight || tileHeight
+                                });
+                            }
+                        }
+
+                        if (collisions.length > 0) {
+                            tileCollisionLookup[globalId] = collisions;
+                        }
+                    });
+                }
+            });
+        }
+
+        // 2. Iterate Layers to place collisions in world
+        if (mapData.layers) {
+            mapData.layers.forEach(layer => {
+                if (layer.type === 'tilelayer' && layer.data) {
+                    layer.data.forEach((gidWithFlags, index) => {
+                        // Clear flip flags (top 3 bits)
+                        // https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
+                        const gid = gidWithFlags & ~(0xE0000000);
+
+                        if (gid === 0) return; // Empty tile
+
+                        if (tileCollisionLookup[gid]) {
+                            // Calculate World Position of this Tile
+                            const col = index % layer.width;
+                            const row = Math.floor(index / layer.width);
+                            const worldX = col * tileWidth;
+                            const worldY = row * tileHeight;
+
+                            // Add all collision rects for this tile
+                            tileCollisionLookup[gid].forEach(rect => {
+                                collisionRects.push({
+                                    x: worldX + rect.x,
+                                    y: worldY + rect.y,
+                                    w: rect.w,
+                                    h: rect.h
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        console.log(`Loaded ${collisionRects.length} tiled collision zones.`);
+
+    } else {
+        console.error('Map file not found for collision loading:', mapPath);
+    }
+} catch (err) {
+    console.error('Error loading map collisions:', err);
+}
+
+
+const checkMapCollision = (x, y, size) => {
+    // Player Rect
+    const pLeft = x - size / 2;
+    const pRight = x + size / 2;
+    const pTop = y - size / 2;
+    const pBottom = y + size / 2;
+
+    for (const rect of collisionRects) {
+        // AABB Intersect
+        if (pRight > rect.x && pLeft < rect.x + rect.w &&
+            pBottom > rect.y && pTop < rect.y + rect.h) {
+            return true;
+        }
+    }
+    return false;
+};
+
+
 const queue = [];
-const games = {}; // { gameId: { players, projectiles, lastTick } }
+const games = {};
 
 class GameState {
     constructor(player1, player2) {
@@ -16,17 +143,27 @@ class GameState {
                 id: player1.id,
                 hp: 100,
                 x: 100,
-                y: 100,
+                y: 1024,
+                vx: 0,
+                vy: 0,
                 mood: player1.mood,
-                inputs: {}
+                action: null,
+                actionTimer: 0,
+                inputs: {},
+                facing: 1
             },
             [player2.id]: {
                 id: player2.id,
                 hp: 100,
-                x: 700,
-                y: 500,
+                x: 1948,
+                y: 1024,
+                vx: 0,
+                vy: 0,
                 mood: player2.mood,
-                inputs: {}
+                action: null,
+                actionTimer: 0,
+                inputs: {},
+                facing: -1
             }
         };
         this.projectiles = [];
@@ -38,48 +175,123 @@ class GameState {
         if (this.ended) return;
 
         const now = Date.now();
-        // const dt = (now - this.lastUpdateTime) / 1000; // Delta time in seconds
         this.lastUpdateTime = now;
 
-        // 1. Process Inputs & Move Players
+        // 1. Process Inputs & Apply Physics
         Object.values(this.players).forEach(p => {
-            if (p.inputs.w) p.y = Math.max(25, p.y - PLAYER_SPEED);
-            if (p.inputs.s) p.y = Math.min(MAP_HEIGHT - 25, p.y + PLAYER_SPEED);
-            if (p.inputs.a) p.x = Math.max(25, p.x - PLAYER_SPEED);
-            if (p.inputs.d) p.x = Math.min(MAP_WIDTH - 25, p.x + PLAYER_SPEED);
+            if (p.inputs.w) p.vy -= ACCELERATION;
+            if (p.inputs.s) p.vy += ACCELERATION;
+            if (p.inputs.a) p.vx -= ACCELERATION;
+            if (p.inputs.d) p.vx += ACCELERATION;
+
+            if (p.actionTimer > 0) {
+                p.actionTimer--;
+                if (p.actionTimer <= 0) p.action = null;
+            }
+
+            p.vx *= FRICTION;
+            p.vy *= FRICTION;
+
+            const speed = Math.hypot(p.vx, p.vy);
+            if (speed > MAX_SPEED) {
+                const ratio = MAX_SPEED / speed;
+                p.vx *= ratio;
+                p.vy *= ratio;
+            }
+
+            if (Math.abs(p.vx) < 0.01) p.vx = 0;
+            if (Math.abs(p.vy) < 0.01) p.vy = 0;
+
+            let nextX = p.x + p.vx;
+            let nextY = p.y + p.vy;
+
+            // Boundary
+            if (nextX < PLAYER_SIZE / 2) { nextX = PLAYER_SIZE / 2; p.vx *= -0.5; }
+            if (nextX > MAP_WIDTH - PLAYER_SIZE / 2) { nextX = MAP_WIDTH - PLAYER_SIZE / 2; p.vx *= -0.5; }
+            if (nextY < PLAYER_SIZE / 2) { nextY = PLAYER_SIZE / 2; p.vy *= -0.5; }
+            if (nextY > MAP_HEIGHT - PLAYER_SIZE / 2) { nextY = MAP_HEIGHT - PLAYER_SIZE / 2; p.vy *= -0.5; }
+
+            // Collisions
+            if (checkMapCollision(nextX, p.y, PLAYER_SIZE)) {
+                p.vx = 0;
+                nextX = p.x;
+            }
+            if (checkMapCollision(nextX, nextY, PLAYER_SIZE)) {
+                p.vy = 0;
+                nextY = p.y;
+            }
+
+            p.x = nextX;
+            p.y = nextY;
+
+            // Update Facing
+            if (p.vx > 0.1) p.facing = 1;
+            else if (p.vx < -0.1) p.facing = -1;
         });
 
-        // 2. Move Projectiles
+        // 2. Projectiles
         this.projectiles.forEach(p => {
             p.x += p.vx;
             p.y += p.vy;
         });
 
-        // 3. Cleanup Projectiles (out of bounds)
-        this.projectiles = this.projectiles.filter(p =>
-            p.x > 0 && p.x < MAP_WIDTH && p.y > 0 && p.y < MAP_HEIGHT && !p.hit
-        );
+        this.projectiles = this.projectiles.filter(p => {
+            const travelled = Math.hypot(p.x - p.startX, p.y - p.startY);
+            return p.x > 0 && p.x < MAP_WIDTH && p.y > 0 && p.y < MAP_HEIGHT && !p.hit && travelled < 1100;
+        });
 
-        // 4. Collision Detection
+        // 3. Projectile Collisions
         this.projectiles.forEach(proj => {
+            if (proj.hit) return;
+
+            // Wall Hit
+            if (checkMapCollision(proj.x, proj.y, 5)) {
+                proj.hit = true;
+                return;
+            }
+
+            // Player Hit
             Object.values(this.players).forEach(player => {
                 if (proj.owner !== player.id) {
-                    const dx = proj.x - player.x;
-                    const dy = proj.y - player.y;
+                    // Head Hitbox Logic
+                    const speed = Math.hypot(player.vx || 0, player.vy || 0);
+                    const hasInput = player.inputs && (player.inputs.w || player.inputs.s || player.inputs.a || player.inputs.d);
+                    const isSliding = speed > 0.1 && !hasInput;
+
+                    let offsetX = -2.5;
+                    let offsetY = -14;
+
+                    if (isSliding) {
+                        if (player.facing === -1) {
+                            // Sliding LEFT
+                            offsetX = 16;
+                            offsetY = 0;
+                        } else {
+                            // Sliding RIGHT
+                            offsetX = -16;
+                            offsetY = 0;
+                        }
+                    }
+
+                    const headX = player.x + offsetX;
+                    const headY = player.y + offsetY;
+                    const headRadius = 15;
+
+                    const dx = proj.x - headX;
+                    const dy = proj.y - headY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
-                    if (dist < (PLAYER_SIZE / 2 + PROJ_SIZE / 2)) {
-                        // HIT!
-                        if (!proj.hit) {
-                            player.hp -= 10;
-                            proj.hit = true;
-                        }
+                    if (dist < (headRadius + PROJ_SIZE / 2)) {
+                        player.hp -= 10;
+                        proj.hit = true;
+                        player.vx += Math.sign(proj.vx) * 5;
+                        player.vy += Math.sign(proj.vy) * 5;
                     }
                 }
             });
         });
 
-        // 5. Check Win Condition
+        // 4. Win
         const alivePlayers = Object.values(this.players).filter(p => p.hp > 0);
         if (alivePlayers.length < 2) {
             this.ended = true;
@@ -94,8 +306,6 @@ class GameState {
 }
 
 export const setupGameHandler = (io) => {
-
-    // Server Tick Loop
     setInterval(() => {
         Object.keys(games).forEach(gameId => {
             const game = games[gameId];
@@ -105,7 +315,6 @@ export const setupGameHandler = (io) => {
                 io.to(gameId).emit('game:over', { winner: result.winner });
                 delete games[gameId];
             } else {
-                // Broadcast State Snapshot
                 io.to(gameId).emit('game:state', {
                     players: game.players,
                     projectiles: game.projectiles
@@ -116,10 +325,8 @@ export const setupGameHandler = (io) => {
 
 
     io.on('connection', (socket) => {
+        socket.playerData = {};
 
-        socket.playerData = {}; // Initialize
-
-        // --- Matchmaking ---
         socket.on('game:join_queue', (data) => {
             socket.playerData = { ...data, id: socket.id };
 
@@ -132,10 +339,9 @@ export const setupGameHandler = (io) => {
 
                 games[gameId] = new GameState(socket.playerData, opponent.playerData);
 
-                // Notify start
                 io.to(gameId).emit('game:start', {
                     gameId,
-                    myId: socket.id, // Inform client of their ID explicitly if needed
+                    myId: socket.id,
                     gameState: games[gameId]
                 });
 
@@ -146,7 +352,6 @@ export const setupGameHandler = (io) => {
             }
         });
 
-        // --- Inputs ---
         socket.on('game:input', ({ gameId, inputs }) => {
             const game = games[gameId];
             if (game && game.players[socket.id]) {
@@ -158,16 +363,26 @@ export const setupGameHandler = (io) => {
             const game = games[gameId];
             if (game && game.players[socket.id]) {
                 const p = game.players[socket.id];
+                p.action = 'shoot';
+                p.actionTimer = 20;
 
-                // Calculate normalized vector
                 const dx = targetX - p.x;
                 const dy = targetY - p.y;
                 const len = Math.sqrt(dx * dx + dy * dy);
+
+                // Enforce Facing Direction
+                // If facing Right (1), reject Left shots (dx < 0)
+                // If facing Left (-1), reject Right shots (dx > 0)
+                if ((p.facing === 1 && dx < 0) || (p.facing === -1 && dx > 0)) {
+                    return;
+                }
 
                 if (len > 0) {
                     game.projectiles.push({
                         x: p.x,
                         y: p.y,
+                        startX: p.x,
+                        startY: p.y,
                         vx: (dx / len) * PROJ_SPEED,
                         vy: (dy / len) * PROJ_SPEED,
                         owner: socket.id
@@ -176,13 +391,10 @@ export const setupGameHandler = (io) => {
             }
         });
 
-        // --- Cleanup ---
         socket.on('disconnect', () => {
-            // Remove from queue
             const qIdx = queue.indexOf(socket);
             if (qIdx !== -1) queue.splice(qIdx, 1);
 
-            // End active games
             for (const [gid, g] of Object.entries(games)) {
                 if (g.players[socket.id]) {
                     io.to(gid).emit('game:opponent_left');
