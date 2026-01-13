@@ -184,8 +184,8 @@ class MainScene extends Phaser.Scene {
         });
 
         this.socket.on('game:shoot_effect', (data) => {
-            if (data.playerId !== this.playerId) {
-                this.sound.play('single_shot');
+            if (data.playerId !== this.playerId && data.type) {
+                this.sound.play(data.type);
             }
         });
 
@@ -213,35 +213,36 @@ class MainScene extends Phaser.Scene {
         this.burstInterval = null;
         this.secondShotTimer = null;
 
-        const performShoot = (pointer) => {
+        const performShoot = (pointer, soundType = null) => {
             const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
             this.socket.emit('game:shoot', {
                 gameId: this.gameId,
                 targetX: worldPoint.x,
-                targetY: worldPoint.y
+                targetY: worldPoint.y,
+                soundType
             });
         };
 
-        const startBurst = (pointer) => {
+        const startBurst = (pointer, soundType) => {
             // Bullet 1
-            performShoot(pointer);
+            performShoot(pointer, soundType);
             // this.sound.play('single_shot');
 
             // Bullet 2 (after 150ms)
             this.secondShotTimer = setTimeout(() => {
-                performShoot(pointer);
+                performShoot(pointer, null);
                 // this.sound.play('burst');
             }, 150);
         };
 
         this.input.on('pointerdown', (pointer) => {
             // Immediate Burst Start
-            startBurst(pointer);
+            startBurst(pointer, 'single_shot');
             this.sound.play('single_shot');
 
             // Cycle: Start a new burst every 650ms (150ms burst + 500ms pause)
             this.burstInterval = setInterval(() => {
-                startBurst(pointer);
+                startBurst(pointer, 'burst');
                 this.sound.play('burst');
             }, 650);
         });

@@ -359,7 +359,7 @@ export const setupGameHandler = (io) => {
             }
         });
 
-        socket.on('game:shoot', ({ gameId, targetX, targetY }) => {
+        socket.on('game:shoot', ({ gameId, targetX, targetY, soundType }) => {
             const game = games[gameId];
             if (game && game.players[socket.id]) {
                 const p = game.players[socket.id];
@@ -388,11 +388,13 @@ export const setupGameHandler = (io) => {
                         owner: socket.id
                     });
 
-                    // Broadcast shoot effect
-                    io.to(gameId).emit('game:shoot_effect', {
-                        playerId: socket.id,
-                        type: 'single_shot'
-                    });
+                    // Broadcast shoot effect if soundType is provided
+                    if (soundType) {
+                        io.to(gameId).emit('game:shoot_effect', {
+                            playerId: socket.id,
+                            type: soundType
+                        });
+                    }
                 }
             }
         });
