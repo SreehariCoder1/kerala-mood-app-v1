@@ -298,10 +298,6 @@ class MainScene extends Phaser.Scene {
                 sprite.setOrigin(0.5);
                 sprite.setScale(0.12);
 
-                // Hitbox Visualization (Head Only)
-                // Center roughly at head height (y: -20 to -30 depending on sprite scale)
-                const hitbox = this.add.circle(-2.5, -14, 15, 0xff0000, 0.4);
-
                 const name = this.add.text(
                     0,
                     45,
@@ -313,8 +309,8 @@ class MainScene extends Phaser.Scene {
                 const hpFg = this.add.rectangle(0, -55, 40, 6, 0x00ff00);
                 hpFg.setOrigin(0.5);
 
-                // Render Order: Sprite -> Hitbox (on top) -> Name -> UI
-                container.add([sprite, hitbox, name, hpBg, hpFg]);
+                // Render Order: Sprite -> Name -> UI
+                container.add([sprite, name, hpBg, hpFg]);
 
                 pObj = {
                     container,
@@ -386,18 +382,7 @@ class MainScene extends Phaser.Scene {
                 pObj.animState = newState;
             }
 
-            // Hitbox Adjustment for Sliding
-            if (newState === 'slide') {
-                if (pObj.sprite.flipX) {
-                    // Sliding LEFT
-                    pObj.container.list[1].setPosition(16, 0);
-                } else {
-                    // Sliding RIGHT
-                    pObj.container.list[1].setPosition(-16, 0);
-                }
-            } else {
-                pObj.container.list[1].setPosition(-2.5, -14); // Standard head position
-            }
+
 
             if (newState === 'run' || newState === 'run_shoot') {
                 pObj.container.y += Math.sin(time * 0.02) * 0.3;
