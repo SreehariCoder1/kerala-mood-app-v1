@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const TICK_RATE = 60;
+const TICK_RATE = 90; // Reduced from 60 to save CPU
 const ACCELERATION = 1.0;
 const FRICTION = 0.90;
 const MAX_SPEED = 8;
@@ -15,8 +15,24 @@ const PLAYER_SIZE = 40;
 const PROJ_SPEED = 12;
 const PROJ_SIZE = 15;
 
-// // --- COLLISION LOADING ---
-let collisionRects = [];
+// --- SPATIAL GRID FOR COLLISIONS ---
+const CELL_SIZE = 256;
+const collisionGrid = {}; // key: "x,y", value: [rects]
+
+const addToGrid = (rect) => {
+    const startCol = Math.floor(rect.x / CELL_SIZE);
+    const endCol = Math.floor((rect.x + rect.w) / CELL_SIZE);
+    const startRow = Math.floor(rect.y / CELL_SIZE);
+    const endRow = Math.floor((rect.y + rect.h) / CELL_SIZE);
+
+    for (let c = startCol; c <= endCol; c++) {
+        for (let r = startRow; r <= endRow; r++) {
+            const key = `${c},${r}`;
+            if (!collisionGrid[key]) collisionGrid[key] = [];
+            collisionGrid[key].push(rect);
+        }
+    }
+};
 
 try {
     const mapPath = path.resolve(__dirname, '../../public/game/maps/mood_game_map_v1.tmj');
@@ -26,7 +42,6 @@ try {
 
         const tileWidth = mapData.tilewidth;
         const tileHeight = mapData.tileheight;
-        const mapWidth = mapData.width;
 
         // 1. Build a lookup for Tile Collisions: { gid: [ {x,y,w,h}, ... ] }
         const tileCollisionLookup = {};
@@ -73,31 +88,29 @@ try {
         }
 
         // 2. Iterate Layers to place collisions in world
+        let totalRects = 0;
         if (mapData.layers) {
             mapData.layers.forEach(layer => {
                 if (layer.type === 'tilelayer' && layer.data) {
                     layer.data.forEach((gidWithFlags, index) => {
-                        // Clear flip flags (top 3 bits)
-                        // https://doc.mapeditor.org/en/stable/reference/tmx-map-format/#tile-flipping
                         const gid = gidWithFlags & ~(0xE0000000);
-
-                        if (gid === 0) return; // Empty tile
+                        if (gid === 0) return;
 
                         if (tileCollisionLookup[gid]) {
-                            // Calculate World Position of this Tile
                             const col = index % layer.width;
                             const row = Math.floor(index / layer.width);
                             const worldX = col * tileWidth;
                             const worldY = row * tileHeight;
 
-                            // Add all collision rects for this tile
                             tileCollisionLookup[gid].forEach(rect => {
-                                collisionRects.push({
+                                const worldRect = {
                                     x: worldX + rect.x,
                                     y: worldY + rect.y,
                                     w: rect.w,
                                     h: rect.h
-                                });
+                                };
+                                addToGrid(worldRect);
+                                totalRects++;
                             });
                         }
                     });
@@ -105,7 +118,7 @@ try {
             });
         }
 
-        console.log(`Loaded ${collisionRects.length} tiled collision zones.`);
+        console.log(`Loaded ${totalRects} collision zones into spatial grid.`);
 
     } else {
         console.error('Map file not found for collision loading:', mapPath);
@@ -122,13 +135,35 @@ const checkMapCollision = (x, y, size) => {
     const pTop = y - size / 2;
     const pBottom = y + size / 2;
 
-    for (const rect of collisionRects) {
-        // AABB Intersect
-        if (pRight > rect.x && pLeft < rect.x + rect.w &&
-            pBottom > rect.y && pTop < rect.y + rect.h) {
-            return true;
+    const col = Math.floor(x / CELL_SIZE);
+    const row = Math.floor(y / CELL_SIZE);
+    const key = `${col},${row}`;
+
+    // Also check neighbors if we are on the edge, or just simple check:
+    // Ideally we check grid cells that the Player Rect touches.
+    // For simplicity with point/small-size checks, we can check 9 neighbors or just calculate touched cells.
+
+    // Robust check: determine loop range for grid keys
+    const startCol = Math.floor(pLeft / CELL_SIZE);
+    const endCol = Math.floor(pRight / CELL_SIZE);
+    const startRow = Math.floor(pTop / CELL_SIZE);
+    const endRow = Math.floor(pBottom / CELL_SIZE);
+
+    for (let c = startCol; c <= endCol; c++) {
+        for (let r = startRow; r <= endRow; r++) {
+            const cellKey = `${c},${r}`;
+            const cellRects = collisionGrid[cellKey];
+            if (cellRects) {
+                for (const rect of cellRects) {
+                    if (pRight > rect.x && pLeft < rect.x + rect.w &&
+                        pBottom > rect.y && pTop < rect.y + rect.h) {
+                        return true;
+                    }
+                }
+            }
         }
     }
+
     return false;
 };
 
