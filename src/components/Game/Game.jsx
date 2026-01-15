@@ -3,6 +3,8 @@ import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 import GameLobby from './GameLobby';
 import GameArena from './GameArena';
+import SearchingScreen from './ui/SearchingScreen';
+import GameOverScreen from './ui/GameOverScreen';
 import config from '../../config';
 import { toast } from 'react-hot-toast';
 
@@ -112,11 +114,7 @@ const Game = () => {
             )}
 
             {gameState === 'SEARCHING' && (
-                <div className="flex flex-col items-center justify-center min-h-screen text-white">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-400 mb-4"></div>
-                    <h2 className="text-2xl font-bold animate-pulse">Searching for Opponent...</h2>
-                    <p className="text-gray-400">Preparing battle arena...</p>
-                </div>
+                <SearchingScreen />
             )}
 
             {gameState === 'PLAYING' && gameData && (
@@ -130,29 +128,12 @@ const Game = () => {
             )}
 
             {gameState === 'GAMEOVER' && gameOverData && (
-                <div className="flex flex-col items-center justify-center min-h-screen text-white bg-black/80 absolute inset-0 z-50">
-                    <h1 className="text-6xl font-black mb-8">
-                        {gameOverData.winner === 'tie'
-                            ? 'IT\'S A TIE! 🤝'
-                            : (gameOverData.winner === socket.id ? 'VICTORY 🏆' : 'DEFEAT 💀')
-                        }
-                    </h1>
-                    <p className="mb-4 text-2xl font-bold">
-                        Final Score: You {gameOverData.scores ? gameOverData.scores[socket.id] : 0} - {gameOverData.scores ? (Object.values(gameOverData.scores).find((s, i) => Object.keys(gameOverData.scores)[i] !== socket.id)) : 0} Enemy
-                    </p>
-                    <p className="mb-8 text-xl text-gray-300">
-                        {gameOverData.winner === 'tie'
-                            ? 'What a match! Evenly matched moods.'
-                            : (gameOverData.winner === socket.id ? 'You dominated the arena!' : 'Better luck next time!')
-                        }
-                    </p>
-                    <button
-                        onClick={handleBackToLobby}
-                        className="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform"
-                    >
-                        Play Again
-                    </button>
-                </div>
+                <GameOverScreen
+                    winner={gameOverData.winner}
+                    scores={gameOverData.scores}
+                    socketId={socket.id}
+                    onPlayAgain={handleBackToLobby}
+                />
             )}
         </div>
     );

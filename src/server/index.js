@@ -6,7 +6,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import userRoutes from './routes/user.js';
 import moodRoutes from './routes/mood.js';
-import { setupGameHandler } from './gameHandler.js';
+import { setupGameHandler } from './game/SocketHandler.js';
 
 dotenv.config();
 
