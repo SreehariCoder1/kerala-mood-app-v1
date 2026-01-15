@@ -16,6 +16,7 @@ const PROJ_SPEED = 12;
 const PROJ_SIZE = 15;
 
 // --- SPATIAL GRID FOR COLLISIONS ---
+// --- SPATIAL GRID FOR COLLISIONS ---
 const CELL_SIZE = 256;
 const collisionGrid = {}; // key: "x,y", value: [rects]
 
@@ -34,98 +35,103 @@ const addToGrid = (rect) => {
     }
 };
 
-try {
-    const mapPath = path.resolve(__dirname, '../../public/game/maps/mood_game_map_v1.tmj');
-    if (fs.existsSync(mapPath)) {
-        console.log('Loading map collisions from:', mapPath);
-        const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+const loadMapCollisions = () => {
+    try {
+        const mapPath = path.resolve(__dirname, '../../public/game/maps/mood_game_map_v1.tmj');
+        if (fs.existsSync(mapPath)) {
+            console.log('Loading map collisions from:', mapPath);
+            const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
 
-        const tileWidth = mapData.tilewidth;
-        const tileHeight = mapData.tileheight;
+            const tileWidth = mapData.tilewidth;
+            const tileHeight = mapData.tileheight;
 
-        // 1. Build a lookup for Tile Collisions: { gid: [ {x,y,w,h}, ... ] }
-        const tileCollisionLookup = {};
+            // 1. Build a lookup for Tile Collisions: { gid: [ {x,y,w,h}, ... ] }
+            const tileCollisionLookup = {};
 
-        if (mapData.tilesets) {
-            mapData.tilesets.forEach(tileset => {
-                const firstGid = tileset.firstgid;
-                if (tileset.tiles) {
-                    tileset.tiles.forEach(tile => {
-                        const globalId = firstGid + tile.id;
-                        const collisions = [];
+            if (mapData.tilesets) {
+                mapData.tilesets.forEach(tileset => {
+                    const firstGid = tileset.firstgid;
+                    if (tileset.tiles) {
+                        tileset.tiles.forEach(tile => {
+                            const globalId = firstGid + tile.id;
+                            const collisions = [];
 
-                        // Check for ObjectGroup (Tiled Collision Editor)
-                        if (tile.objectgroup && tile.objectgroup.objects) {
-                            tile.objectgroup.objects.forEach(obj => {
-                                collisions.push({
-                                    x: obj.x,
-                                    y: obj.y,
-                                    w: obj.width,
-                                    h: obj.height
-                                });
-                            });
-                        }
-                        // Check for Custom Property "collides"
-                        else if (tile.properties) {
-                            const collidesProp = tile.properties.find(p => p.name === 'collides' && p.value === true);
-                            if (collidesProp) {
-                                // Default to full tile
-                                collisions.push({
-                                    x: 0,
-                                    y: 0,
-                                    w: tileset.tilewidth || tileWidth,
-                                    h: tileset.tileheight || tileHeight
+                            // Check for ObjectGroup (Tiled Collision Editor)
+                            if (tile.objectgroup && tile.objectgroup.objects) {
+                                tile.objectgroup.objects.forEach(obj => {
+                                    collisions.push({
+                                        x: obj.x,
+                                        y: obj.y,
+                                        w: obj.width,
+                                        h: obj.height
+                                    });
                                 });
                             }
-                        }
+                            // Check for Custom Property "collides"
+                            else if (tile.properties) {
+                                const collidesProp = tile.properties.find(p => p.name === 'collides' && p.value === true);
+                                if (collidesProp) {
+                                    // Default to full tile
+                                    collisions.push({
+                                        x: 0,
+                                        y: 0,
+                                        w: tileset.tilewidth || tileWidth,
+                                        h: tileset.tileheight || tileHeight
+                                    });
+                                }
+                            }
 
-                        if (collisions.length > 0) {
-                            tileCollisionLookup[globalId] = collisions;
-                        }
-                    });
-                }
-            });
+                            if (collisions.length > 0) {
+                                tileCollisionLookup[globalId] = collisions;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // 2. Iterate Layers to place collisions in world
+            let totalRects = 0;
+            if (mapData.layers) {
+                mapData.layers.forEach(layer => {
+                    if (layer.type === 'tilelayer' && layer.data) {
+                        layer.data.forEach((gidWithFlags, index) => {
+                            const gid = gidWithFlags & ~(0xE0000000);
+                            if (gid === 0) return;
+
+                            if (tileCollisionLookup[gid]) {
+                                const col = index % layer.width;
+                                const row = Math.floor(index / layer.width);
+                                const worldX = col * tileWidth;
+                                const worldY = row * tileHeight;
+
+                                tileCollisionLookup[gid].forEach(rect => {
+                                    const worldRect = {
+                                        x: worldX + rect.x,
+                                        y: worldY + rect.y,
+                                        w: rect.w,
+                                        h: rect.h
+                                    };
+                                    addToGrid(worldRect);
+                                    totalRects++;
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            console.log(`Loaded ${totalRects} collision zones into spatial grid.`);
+
+        } else {
+            console.error('Map file not found for collision loading:', mapPath);
         }
-
-        // 2. Iterate Layers to place collisions in world
-        let totalRects = 0;
-        if (mapData.layers) {
-            mapData.layers.forEach(layer => {
-                if (layer.type === 'tilelayer' && layer.data) {
-                    layer.data.forEach((gidWithFlags, index) => {
-                        const gid = gidWithFlags & ~(0xE0000000);
-                        if (gid === 0) return;
-
-                        if (tileCollisionLookup[gid]) {
-                            const col = index % layer.width;
-                            const row = Math.floor(index / layer.width);
-                            const worldX = col * tileWidth;
-                            const worldY = row * tileHeight;
-
-                            tileCollisionLookup[gid].forEach(rect => {
-                                const worldRect = {
-                                    x: worldX + rect.x,
-                                    y: worldY + rect.y,
-                                    w: rect.w,
-                                    h: rect.h
-                                };
-                                addToGrid(worldRect);
-                                totalRects++;
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        console.log(`Loaded ${totalRects} collision zones into spatial grid.`);
-
-    } else {
-        console.error('Map file not found for collision loading:', mapPath);
+    } catch (err) {
+        console.error('Error loading map collisions:', err);
     }
-} catch (err) {
-    console.error('Error loading map collisions:', err);
-}
+};
+
+// Initialize Collisions
+loadMapCollisions();
 
 
 const checkMapCollision = (x, y, size) => {

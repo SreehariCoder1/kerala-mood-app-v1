@@ -89,34 +89,17 @@ class MainScene extends Phaser.Scene {
                 let key = '';
 
                 // GID MAPPING (based on game_map_v1.tmj order)
-                // Tree_03: gid 10
-                // Tree_01: gid 11
-                // Tree_07: gid 12
-                // Markup_01: gid 13
-                // Log: gid 14
-                // Flag_A: gid 8
-                // Flag_B: gid 9
-                // Hedge_A_01: gid 6
-                // Hedge_A_02: gid 7
+                const GID_MAPPING = {
+                    10: 'Tree_03',
+                    11: 'Tree_01',
+                    12: 'Tree_07',
+                    13: 'Markup_01',
+                    14: 'Log',
+                    8: 'Flag_A',
+                    9: 'Flag_B'
+                };
 
-                // Note: Tiled GIDs are global. We can check the tileset GID logic or just map known IDs.
-                // In game_map_v1:
-                // tile_2: 1
-                // Block_A_01: 2
-                // ...
-                // Tree_03: 10
-                // Tree_01: 11
-                // Tree_07: 12
-                // Markup: 13
-                // Log: 14
-
-                if (obj.gid === 10) key = 'Tree_03';
-                else if (obj.gid === 11) key = 'Tree_01';
-                else if (obj.gid === 12) key = 'Tree_07';
-                else if (obj.gid === 13) key = 'Markup_01';
-                else if (obj.gid === 14) key = 'Log';
-                else if (obj.gid === 8) key = 'Flag_A';
-                else if (obj.gid === 9) key = 'Flag_B';
+                key = GID_MAPPING[obj.gid];
 
                 if (key) {
                     const sprite = this.add.image(obj.x, obj.y, key);
@@ -208,7 +191,6 @@ class MainScene extends Phaser.Scene {
             }
         });
 
-        /* ---------------- SHOOT ---------------- */
         /* ---------------- SHOOT ---------------- */
         this.burstInterval = null;
         this.secondShotTimer = null;
@@ -484,19 +466,6 @@ const GameArena = ({ socket, gameId, initialGameState, playerId, onGameOver }) =
 
         return () => {
             socket.off('game:state', onGameState);
-            socket.off('game:state'); // Note: MainScene also listens, but this might remove that listener too if not careful. 
-            // Actually socket.off('event', handler) removes specific. socket.off('event') removes all.
-            // Phaser MainScene attaches its own listener.
-            // We should be careful. 
-            // Ideally MainScene manages its own listeners. 
-            // But 'socket' is passed by reference.
-
-            // To be safe, we only remove ours:
-            // socket.off('game:state', onGameState); 
-            // BUT MainScene also adds one. 
-            // In strict mode, cleanup runs.
-            // Let's just remove specific listener here.
-
             socket.off('game:over');
             socket.off('game:shoot_effect');
             game.destroy(true);
