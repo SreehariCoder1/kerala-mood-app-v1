@@ -18,7 +18,7 @@ class MainScene extends Phaser.Scene {
 
     preload() {
         // Player Assets
-        this.load.image('player', '/game/player.png');
+
         const sheetConfig = { frameWidth: 567, frameHeight: 556 };
         this.load.spritesheet('run', '/game/run.png', sheetConfig);
         this.load.spritesheet('idle', '/game/idle.png', sheetConfig);
@@ -154,7 +154,7 @@ class MainScene extends Phaser.Scene {
         /* ---------------- CAMERA & RENDER QUALITY ---------------- */
         this.cameras.main.roundPixels = true;
 
-        ['run', 'idle', 'slide', 'shoot', 'run_shoot', 'player'].forEach(key => {
+        ['run', 'idle', 'slide', 'shoot', 'run_shoot'].forEach(key => {
             if (this.textures.exists(key)) {
                 this.textures.get(key).setFilter(Phaser.Textures.FilterMode.LINEAR);
             }
