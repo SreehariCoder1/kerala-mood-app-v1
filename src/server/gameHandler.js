@@ -171,6 +171,8 @@ const checkMapCollision = (x, y, size) => {
 const queue = [];
 const games = {};
 
+const GAME_DURATION = 360; // 6 Minutes in seconds
+
 class GameState {
     constructor(player1, player2) {
         this.players = {
@@ -179,30 +181,39 @@ class GameState {
                 hp: 100,
                 x: 100,
                 y: 1024,
+                spawnX: 100,
+                spawnY: 1024,
                 vx: 0,
                 vy: 0,
                 mood: player1.mood,
                 action: null,
                 actionTimer: 0,
                 inputs: {},
-                facing: 1
+                facing: 1,
+                kills: 0,
+                deaths: 0
             },
             [player2.id]: {
                 id: player2.id,
                 hp: 100,
                 x: 1948,
                 y: 1024,
+                spawnX: 1948,
+                spawnY: 1024,
                 vx: 0,
                 vy: 0,
                 mood: player2.mood,
                 action: null,
                 actionTimer: 0,
                 inputs: {},
-                facing: -1
+                facing: -1,
+                kills: 0,
+                deaths: 0
             }
         };
         this.projectiles = [];
         this.lastUpdateTime = Date.now();
+        this.timeLeft = GAME_DURATION;
         this.ended = false;
     }
 
@@ -211,6 +222,11 @@ class GameState {
 
         const now = Date.now();
         this.lastUpdateTime = now;
+
+        // Timer Logic (Decrement based on TICK_RATE calls ~ roughly 1/TICK_RATE seconds per call, 
+        // but easier to just decrement by delta time or fixed step if loop is fixed)
+        // Since the outer loop is setInterval(..., 1000/TICK_RATE), we decrement by 1/TICK_RATE
+        this.timeLeft -= (1 / TICK_RATE);
 
         // 1. Process Inputs & Apply Physics
         Object.values(this.players).forEach(p => {
@@ -321,18 +337,88 @@ class GameState {
                         proj.hit = true;
                         player.vx += Math.sign(proj.vx) * 5;
                         player.vy += Math.sign(proj.vy) * 5;
+
+                        // Check Death (Respawn Logic)
+                        if (player.hp <= 0) {
+                            // Find Killer
+                            const killer = this.players[proj.owner];
+                            if (killer) {
+                                killer.kills++;
+                            }
+                            player.deaths++;
+
+                            // Respawn Logic
+                            let spawnPos = { x: player.spawnX, y: player.spawnY };
+
+                            // 1. Identify Enemy Position
+                            // We need to find the OTHER player.
+                            const enemy = Object.values(this.players).find(p => p.id !== player.id);
+
+                            if (enemy) {
+                                let bestPos = null;
+                                let maxDist = -1;
+
+                                // Try 20 times to find a valid spot
+                                for (let i = 0; i < 20; i++) {
+                                    // Random pos within map (padded by 100px)
+                                    const rx = Math.random() * (MAP_WIDTH - 200) + 100;
+                                    const ry = Math.random() * (MAP_HEIGHT - 200) + 100;
+
+                                    // Check Collision
+                                    if (checkMapCollision(rx, ry, PLAYER_SIZE)) continue;
+
+                                    // Check Distance
+                                    const dist = Math.hypot(rx - enemy.x, ry - enemy.y);
+
+                                    if (dist > 1500) {
+                                        spawnPos = { x: rx, y: ry };
+                                        break; // Perfect spot found
+                                    }
+
+                                    if (dist > maxDist) {
+                                        maxDist = dist;
+                                        bestPos = { x: rx, y: ry };
+                                    }
+                                }
+
+                                // Fallback to best found if strict constraint failed
+                                if (bestPos && maxDist > -1 && spawnPos.x === player.spawnX) {
+                                    spawnPos = bestPos;
+                                }
+                            }
+
+                            // Apply Spawn
+                            player.hp = 100;
+                            player.x = spawnPos.x;
+                            player.y = spawnPos.y;
+                            player.vx = 0;
+                            player.vy = 0;
+                        }
                     }
                 }
             });
         });
 
-        // 4. Win
-        const alivePlayers = Object.values(this.players).filter(p => p.hp > 0);
-        if (alivePlayers.length < 2) {
+        // 4. Time Check / Game Over
+        if (this.timeLeft <= 0) {
             this.ended = true;
+
+            const pIds = Object.keys(this.players);
+            const p1 = this.players[pIds[0]];
+            const p2 = this.players[pIds[1]];
+
+            let winner = null;
+            if (p1.kills > p2.kills) winner = p1.id;
+            else if (p2.kills > p1.kills) winner = p2.id;
+            else winner = 'tie'; // Tie
+
             return {
                 gameOver: true,
-                winner: alivePlayers.length === 1 ? alivePlayers[0].id : null
+                winner: winner,
+                scores: {
+                    [p1.id]: p1.kills,
+                    [p2.id]: p2.kills
+                }
             };
         }
 
@@ -347,12 +433,20 @@ export const setupGameHandler = (io) => {
             const result = game.update();
 
             if (result?.gameOver) {
-                io.to(gameId).emit('game:over', { winner: result.winner });
+                io.to(gameId).emit('game:over', {
+                    winner: result.winner,
+                    scores: result.scores
+                });
                 delete games[gameId];
             } else {
                 io.to(gameId).emit('game:state', {
                     players: game.players,
-                    projectiles: game.projectiles
+                    projectiles: game.projectiles,
+                    timeLeft: game.timeLeft,
+                    scores: {
+                        [Object.keys(game.players)[0]]: game.players[Object.keys(game.players)[0]].kills,
+                        [Object.keys(game.players)[1]]: game.players[Object.keys(game.players)[1]].kills
+                    }
                 });
             }
         });
@@ -413,11 +507,25 @@ export const setupGameHandler = (io) => {
                 }
 
                 if (len > 0) {
+                    // CHANGE BULLET STARTING POSITION HERE
+                    let spawnX = p.x;
+                    let spawnY = p.y;
+
+                    if (p.facing === 1) {
+                        // RIGHT FACING OFFSET
+                        spawnX += 20;
+                        spawnY += 0;
+                    } else {
+                        // LEFT FACING OFFSET
+                        spawnX -= 20;
+                        spawnY += 0;
+                    }
+
                     game.projectiles.push({
-                        x: p.x,
-                        y: p.y,
-                        startX: p.x,
-                        startY: p.y,
+                        x: spawnX,
+                        y: spawnY,
+                        startX: spawnX,
+                        startY: spawnY,
                         vx: (dx / len) * PROJ_SPEED,
                         vy: (dy / len) * PROJ_SPEED,
                         owner: socket.id

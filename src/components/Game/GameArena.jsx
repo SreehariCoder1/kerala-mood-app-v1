@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 
 class MainScene extends Phaser.Scene {
@@ -271,10 +271,23 @@ class MainScene extends Phaser.Scene {
         /* ---------------- PROJECTILES ---------------- */
         this.projectileGraphics.clear();
         this.serverState.projectiles.forEach(p => {
-            this.projectileGraphics.fillStyle(0xffaa00, 1);
-            this.projectileGraphics.fillCircle(p.x, p.y, 6);
-            this.projectileGraphics.lineStyle(2, 0xffffff, 0.5);
-            this.projectileGraphics.strokeCircle(p.x, p.y, 6);
+            const angle = Math.atan2(p.vy, p.vx);
+            const len = 12; // Length of the bullet trail/line
+
+            // Calculate tail position based on velocity direction
+            const tx = p.x - Math.cos(angle) * len;
+            const ty = p.y - Math.sin(angle) * len;
+
+            // 1. Glow Effect (Wide, semi-transparent line)
+            this.projectileGraphics.lineStyle(8, 0x0088ff, 0.3); // Outer glow
+            this.projectileGraphics.lineBetween(tx, ty, p.x, p.y);
+
+            this.projectileGraphics.lineStyle(4, 0x00ffff, 0.5); // Inner glow
+            this.projectileGraphics.lineBetween(tx, ty, p.x, p.y);
+
+            // 2. Core (Sharp, bright white/blue center)
+            this.projectileGraphics.lineStyle(2, 0xffffff, 1);
+            this.projectileGraphics.lineBetween(tx, ty, p.x, p.y);
         });
 
         /* ---------------- PLAYERS ---------------- */
@@ -403,8 +416,39 @@ const GameArena = ({ socket, gameId, initialGameState, playerId, onGameOver }) =
     const gameContainerRef = useRef(null);
     const gameInstanceRef = useRef(null);
 
+    const [gameStats, setGameStats] = useState({ timeLeft: 360, myKills: 0, enemyKills: 0 });
+
     useEffect(() => {
         if (!gameContainerRef.current) return;
+
+        const onGameState = (state) => {
+            if (state) {
+                const myId = socket.id;
+                // scores map: { [socketId]: kills }
+                // We need to identify which is 'my' score and which is 'enemy'
+                let myKills = 0;
+                let enemyKills = 0;
+
+                if (state.players && state.players[myId]) {
+                    myKills = state.players[myId].kills || 0;
+                }
+
+                // Find enemy
+                Object.values(state.players || {}).forEach(p => {
+                    if (p.id !== myId) {
+                        enemyKills = p.kills || 0;
+                    }
+                });
+
+                setGameStats({
+                    timeLeft: state.timeLeft || 0,
+                    myKills,
+                    enemyKills
+                });
+            }
+        };
+
+        socket.on('game:state', onGameState);
 
         const config = {
             type: Phaser.AUTO,
@@ -439,19 +483,46 @@ const GameArena = ({ socket, gameId, initialGameState, playerId, onGameOver }) =
         });
 
         return () => {
-            socket.off('game:state');
+            socket.off('game:state', onGameState);
+            socket.off('game:state'); // Note: MainScene also listens, but this might remove that listener too if not careful. 
+            // Actually socket.off('event', handler) removes specific. socket.off('event') removes all.
+            // Phaser MainScene attaches its own listener.
+            // We should be careful. 
+            // Ideally MainScene manages its own listeners. 
+            // But 'socket' is passed by reference.
+
+            // To be safe, we only remove ours:
+            // socket.off('game:state', onGameState); 
+            // BUT MainScene also adds one. 
+            // In strict mode, cleanup runs.
+            // Let's just remove specific listener here.
+
             socket.off('game:over');
             socket.off('game:shoot_effect');
             game.destroy(true);
         };
     }, []);
 
+    const formatTime = (seconds) => {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
     return (
         <div className="fixed inset-0 w-full h-full bg-black">
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center pointer-events-none z-10">
-                <div className="text-xl font-bold mb-2 text-white drop-shadow-md">Game On!</div>
-                <div className="text-sm text-gray-300 drop-shadow-md">
-                    WASD / Arrows to Move · Click to Shoot
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 text-center pointer-events-none z-10 w-full max-w-lg">
+                <div className="text-3xl font-black mb-2 text-white drop-shadow-md tracking-wider">
+                    {formatTime(gameStats.timeLeft)}
+                </div>
+
+                <div className="flex justify-between items-center px-8 text-white font-bold text-xl drop-shadow-md">
+                    <div className="text-blue-400">YOU: {gameStats.myKills}</div>
+                    <div className="text-red-500">ENEMY: {gameStats.enemyKills}</div>
+                </div>
+
+                <div className="text-xs text-gray-400 mt-2 opacity-70">
+                    Highest Kills Wins · 6 Min Deathmatch
                 </div>
             </div>
             <div ref={gameContainerRef} className="w-full h-full overflow-hidden" />

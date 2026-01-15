@@ -132,10 +132,19 @@ const Game = () => {
             {gameState === 'GAMEOVER' && gameOverData && (
                 <div className="flex flex-col items-center justify-center min-h-screen text-white bg-black/80 absolute inset-0 z-50">
                     <h1 className="text-6xl font-black mb-8">
-                        {gameOverData.winner === socket.id ? 'VICTORY 🏆' : 'DEFEAT 💀'}
+                        {gameOverData.winner === 'tie'
+                            ? 'IT\'S A TIE! 🤝'
+                            : (gameOverData.winner === socket.id ? 'VICTORY 🏆' : 'DEFEAT 💀')
+                        }
                     </h1>
-                    <p className="mb-8 text-xl">
-                        {gameOverData.winner === socket.id ? 'You dominated the mood!' : 'Better luck next time!'}
+                    <p className="mb-4 text-2xl font-bold">
+                        Final Score: You {gameOverData.scores ? gameOverData.scores[socket.id] : 0} - {gameOverData.scores ? (Object.values(gameOverData.scores).find((s, i) => Object.keys(gameOverData.scores)[i] !== socket.id)) : 0} Enemy
+                    </p>
+                    <p className="mb-8 text-xl text-gray-300">
+                        {gameOverData.winner === 'tie'
+                            ? 'What a match! Evenly matched moods.'
+                            : (gameOverData.winner === socket.id ? 'You dominated the arena!' : 'Better luck next time!')
+                        }
                     </p>
                     <button
                         onClick={handleBackToLobby}
