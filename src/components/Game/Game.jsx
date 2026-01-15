@@ -72,10 +72,10 @@ const Game = () => {
         };
     }, []);
 
-    const handleFindMatch = (selectedMood) => {
+    const handleFindMatch = () => {
         if (!socket) return;
         setGameState('SEARCHING');
-        socket.emit('game:join_queue', { mood: selectedMood.id });
+        socket.emit('game:join_queue', {});
     };
 
     const handleGameOver = (data) => {
@@ -96,7 +96,7 @@ const Game = () => {
             {/* Back Button */}
             <button
                 onClick={() => navigate('/map')}
-                className="absolute top-4 left-4 z-50 text-white/50 hover:text-white flex items-center gap-2"
+                className="absolute top-4 left-4 z-[60] text-white/50 hover:text-white flex items-center gap-2"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

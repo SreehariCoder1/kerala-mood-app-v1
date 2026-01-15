@@ -116,6 +116,42 @@ class MainScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
+        /* ---------------- RESPONSIVE ZOOM ---------------- */
+        const handleResize = () => {
+            const width = this.scale.width;
+            const height = this.scale.height;
+
+            // Base Resolution (e.g., HD Ready seems good balance)
+            const BASE_WIDTH = 1280;
+            const BASE_HEIGHT = 720;
+
+            // Calculate zoom to ensuring SAFE area fits
+            // We want to see AT LEAST the same amount of world as 1280x720.
+            // User requested: "game supports only minimum 720p and above screen, so apply screen appearing area same for these screens"
+            // To ensure "SAME" area on larger screens (and not MORE area), we use Math.max.
+            // This ensures we Zoom IN if the screen is larger/wider to fit the base dimension.
+
+            const zoomX = width / BASE_WIDTH;
+            const zoomY = height / BASE_HEIGHT;
+
+            // Use the LARGER zoom factor.
+            // If screen is 1920x1080 (1.5x larger than 1280x720), Zoom = 1.5.
+            // Effective View = 1920/1.5 = 1280.
+            // This keeps the visible world area CONSTANT at ~1280x720 regardless of resolution.
+            let zoom = Math.max(zoomX, zoomY);
+
+            // Clamp: Prevent extreme zoom out (too small items) or extreme zoom in (pixelated)
+            // zoom = Phaser.Math.Clamp(zoom, 0.2, 1.5); 
+
+            this.cameras.main.setZoom(zoom);
+        };
+
+        // Listen for resize changes
+        this.scale.on('resize', handleResize, this);
+
+        // Initial Zoom
+        handleResize();
+
         /* ---------------- CAMERA & RENDER QUALITY ---------------- */
         this.cameras.main.roundPixels = true;
 
