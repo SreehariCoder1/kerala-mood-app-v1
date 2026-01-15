@@ -10,7 +10,7 @@ export const MAP_HEIGHT = 2048;
 const PLAYER_SIZE = 40;
 const PROJ_SPEED = 12;
 const PROJ_SIZE = 15;
-const GAME_DURATION = 20; // 6 Minutes in seconds
+const GAME_DURATION = 180; // 6 Minutes in seconds
 
 export class GameState {
     constructor(player1, player2) {

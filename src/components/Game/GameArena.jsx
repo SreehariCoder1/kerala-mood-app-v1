@@ -7,7 +7,7 @@ const GameArena = ({ socket, gameId, initialGameState, playerId, onGameOver }) =
     const gameContainerRef = useRef(null);
     const gameInstanceRef = useRef(null);
 
-    const [gameStats, setGameStats] = useState({ timeLeft: 20, myKills: 0, enemyKills: 0 });
+    const [gameStats, setGameStats] = useState({ timeLeft: 180, myKills: 0, enemyKills: 0 });
 
     useEffect(() => {
         if (!gameContainerRef.current) return;
