@@ -44,12 +44,11 @@ const Game = () => {
 
         newSocket.on('connect_error', (err) => {
             console.error('Connection Error:', err);
-            // toast.error(`Connection Error: ${err.message}`);
+            toast.error(`Connection Error: ${err.message}`);
             setIsConnected(false);
         });
 
         newSocket.on('disconnect', () => {
-            console.log('Disconnected');
             setIsConnected(false);
         });
 

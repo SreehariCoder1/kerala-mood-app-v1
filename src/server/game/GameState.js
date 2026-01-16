@@ -1,7 +1,7 @@
 
 import { checkMapCollision } from './CollisionHandler.js';
 
-export const TICK_RATE = 90; // Reduced from 60 to save CPU
+export const TICK_RATE = 60;
 const ACCELERATION = 1.0;
 const FRICTION = 0.90;
 const MAX_SPEED = 8;
@@ -10,7 +10,7 @@ export const MAP_HEIGHT = 2048;
 const PLAYER_SIZE = 40;
 const PROJ_SPEED = 12;
 const PROJ_SIZE = 15;
-const GAME_DURATION = 180; // 6 Minutes in seconds
+const GAME_DURATION = 180;
 
 export class GameState {
     constructor(player1, player2) {

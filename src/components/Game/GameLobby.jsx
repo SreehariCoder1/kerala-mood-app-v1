@@ -1,8 +1,4 @@
-import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-
-// Mood selection removed
-
 
 const GameLobby = ({ onFindMatch, connectionStatus }) => {
     return (

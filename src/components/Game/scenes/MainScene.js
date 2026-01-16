@@ -14,6 +14,7 @@ class MainScene extends Phaser.Scene {
         this.playerContainers = {};
         this.projectileGraphics = null;
         this.serverState = null;
+        this.lastInputs = {};
     }
 
     preload() {
@@ -209,7 +210,7 @@ class MainScene extends Phaser.Scene {
 
         /* ---------------- INPUT LOOP ---------------- */
         this.time.addEvent({
-            delay: 1000 / 30,
+            delay: 1000 / 60,
             loop: true,
             callback: () => {
                 const inputs = {
@@ -219,10 +220,20 @@ class MainScene extends Phaser.Scene {
                     d: this.keys.d.isDown || this.keys.right.isDown
                 };
 
-                this.socket.emit('game:input', {
-                    gameId: this.gameId,
-                    inputs
-                });
+                // Check if inputs changed
+                const isSame =
+                    inputs.w === this.lastInputs.w &&
+                    inputs.s === this.lastInputs.s &&
+                    inputs.a === this.lastInputs.a &&
+                    inputs.d === this.lastInputs.d;
+
+                if (!isSame) {
+                    this.lastInputs = inputs;
+                    this.socket.emit('game:input', {
+                        gameId: this.gameId,
+                        inputs
+                    });
+                }
             }
         });
 
