@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import userRoutes from './routes/user.js';
 import moodRoutes from './routes/mood.js';
 import { setupGameHandler } from './game/SocketHandler.js';
+import { setupChatHandler } from './chat/ChatHandler.js';
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ io.on('connection', (socket) => {
 });
 
 setupGameHandler(io);
+setupChatHandler(io);
 
 
 const PORT = process.env.PORT || 5000;

@@ -18,31 +18,46 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+import GlobalChat from './components/Chat/GlobalChat';
+import { useLocation } from 'react-router-dom';
+
+const AppContent = () => {
+  const location = useLocation();
+  const isGame = location.pathname.startsWith('/game');
+
+  return (
+    <>
+      <Toaster position="top-center" reverseOrder={false} />
+      <MoodNotification />
+      <Routes>
+        <Route path="/" element={<LoginWrapper />} />
+        <Route
+          path="/map"
+          element={
+            <ProtectedRoute>
+              <DistrictMap />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/game"
+          element={
+            <ProtectedRoute>
+              <Game />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+      {!isGame && <GlobalChat />}
+    </>
+  );
+};
+
 const App = () => {
   return (
     <AuthProvider>
-      <Toaster position="top-center" reverseOrder={false} />
-      <MoodNotification />
       <Router>
-        <Routes>
-          <Route path="/" element={<LoginWrapper />} />
-          <Route
-            path="/map"
-            element={
-              <ProtectedRoute>
-                <DistrictMap />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/game"
-            element={
-              <ProtectedRoute>
-                <Game />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <AppContent />
       </Router>
     </AuthProvider>
   )
