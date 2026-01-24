@@ -20,7 +20,10 @@ const io = new Server(httpServer, {
         origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://kerala-mood-app-v1.vercel.app"],
         methods: ["GET", "POST"],
         credentials: true
-    }
+    },
+    // Improve disconnect detection speed (default is 25s/20s)
+    pingTimeout: 10000, // 10 seconds before declaring dead
+    pingInterval: 10000 // Send ping every 10 seconds
 });
 
 app.use(express.json());

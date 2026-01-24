@@ -260,6 +260,9 @@ const GlobalChat = () => {
     const [activeTab, setActiveTab] = useState("All");
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState("");
+    const [onlineCount, setOnlineCount] = useState(0);
+    const [typingUsers, setTypingUsers] = useState(new Set());
+    const typingTimeoutRef = useRef(null);
 
     // Reply State: Array of { id, text, sender }
     const [replyingTo, setReplyingTo] = useState([]);
@@ -273,7 +276,22 @@ const GlobalChat = () => {
     const socketRef = useRef(null);
     const textareaRef = useRef(null);
 
-    // ... (Socket connection useEffect remains same)
+    // Handle Join/Leave events based on isOpen
+    useEffect(() => {
+        if (!socketRef.current) return;
+        
+        if (isOpen) {
+            if (socketRef.current.connected) {
+                socketRef.current.emit('chat:join', { username: user?.name || 'Anonymous' });
+            }
+        } else {
+            if (socketRef.current.connected) {
+                socketRef.current.emit('chat:leave');
+            }
+        }
+    }, [isOpen]);
+
+    // ... (Socket connection useEffect)
     useEffect(() => {
         // Connect to socket using centralized config
         let SOCKET_URL = config.API_URL;
@@ -287,6 +305,11 @@ const GlobalChat = () => {
 
         socketRef.current.on('connect', () => {
             console.log('GlobalChat: Connected to socket', socketRef.current.id);
+            // If chat is already open (e.g. after reconnect), re-join
+            setIsOpen(prev => {
+                if (prev) socketRef.current.emit('chat:join', { username: user?.name || 'Anonymous' });
+                return prev;
+            });
         });
 
         socketRef.current.on('connect_error', (err) => {
@@ -306,6 +329,26 @@ const GlobalChat = () => {
 
         socketRef.current.on('chat:voteUpdate', (updatedMsg) => {
             setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
+        });
+
+        socketRef.current.on('chat:onlineCount', (count) => {
+            setOnlineCount(count);
+        });
+
+        socketRef.current.on('chat:typing', ({ username }) => {
+            setTypingUsers(prev => {
+                const newSet = new Set(prev);
+                newSet.add(username);
+                return newSet;
+            });
+        });
+
+        socketRef.current.on('chat:stopTyping', ({ username }) => {
+            setTypingUsers(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(username);
+                return newSet;
+            });
         });
 
         return () => {
@@ -416,6 +459,12 @@ const GlobalChat = () => {
         setInputValue("");
         setReplyingTo([]); // Reset array
         if (textareaRef.current) textareaRef.current.style.height = 'auto';
+
+        // Stop typing immediately on send
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        if (socketRef.current?.connected && user) {
+            socketRef.current.emit('chat:stopTyping', { username: user.name });
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -572,7 +621,14 @@ const GlobalChat = () => {
                 } bg-gray-900`}>
                 {/* Header */}
                 <div className="bg-gray-800 p-3 flex justify-between items-center border-b border-gray-700">
-                    <h3 className="text-white font-bold">Tea Shop</h3>
+                    <div className="flex items-center gap-3">
+                        <h3 className="text-white font-bold">Tea Shop</h3>
+                        <div className="h-4 w-px bg-gray-600"></div>
+                        <div className="text-[10px] text-green-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                            {onlineCount} Online
+                        </div>
+                    </div>
                     <div className="flex items-center gap-2">
                         {/* FullScreen Toggle */}
                         <button
@@ -663,9 +719,18 @@ const GlobalChat = () => {
                     </div>
                 )}
 
-                {/* Input Area */}
-                <form onSubmit={handleSend} className="p-3 bg-gray-800 border-t border-gray-700">
-                    <div className="flex gap-2 items-end">
+                {/* Typing Indicator & Reply Banner */}
+                {/* Typing Indicator & Reply Banner */}
+                <div className="bg-gray-800 border-t border-gray-700 flex flex-col text-xs text-gray-300 transition-all">
+                    {typingUsers.size > 0 && (
+                        <div className="px-3 py-1 text-[10px] text-gray-400 italic animate-pulse">
+                            {typingUsers.size === 1 
+                                ? `${Array.from(typingUsers)[0]} is typing...` 
+                                : `${typingUsers.size} users typing...`}
+                        </div>
+                    )}
+                    
+                    <form onSubmit={handleSend} className="p-3 flex gap-2 items-end w-full">
                         <select
                             value={selectedMood}
                             onChange={(e) => setSelectedMood(e.target.value)}
@@ -680,7 +745,17 @@ const GlobalChat = () => {
                         <textarea
                             ref={textareaRef}
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={(e) => {
+                                setInputValue(e.target.value);
+                                if (socketRef.current?.connected && user) {
+                                    socketRef.current.emit('chat:typing', { username: user.name });
+                                    
+                                    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                                    typingTimeoutRef.current = setTimeout(() => {
+                                        socketRef.current.emit('chat:stopTyping', { username: user.name });
+                                    }, 2000);
+                                }
+                            }}
                             onKeyDown={handleKeyDown}
                             placeholder={replyingTo.length > 0 ? "Reply to selected..." : `Message...`}
                             rows={1}
@@ -693,8 +768,8 @@ const GlobalChat = () => {
                         >
                             ➤
                         </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </>
     );
