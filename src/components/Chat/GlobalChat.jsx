@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { io } from 'socket.io-client';
+import { useState, useRef, useEffect, useMemo } from "react";
+import io from 'socket.io-client';
+import styles from '../../styles/GlobalChat.module.css';
 import { useAuth } from '../../context/AuthContext';
 import config from '../../config';
+import { playMessageSentSound, playMessageReceivedSound } from '../../utils/audio';
 
 // Mood Constants & Emoji Map
 const moods = ["All", "Happy", "Sad", "Angry", "Excited", "Neutral"];
@@ -224,7 +226,7 @@ const MessageNode = ({ message, replies = [], user, activeTab, onReply, onHide, 
 
             {/* Replies Section */}
             {!isCollapsed && replies.length > 0 && (
-                <div className="ml-4 mt-2 pl-3 border-l-2 border-gray-700 space-y-2 relative">
+                <div className={`mt-2 pl-2 space-y-2 relative ${styles.replyLine}`}>
                     {replies.map(reply => (
                         <ReplyItem
                             key={reply.id}
@@ -262,6 +264,14 @@ const GlobalChat = () => {
     const [inputValue, setInputValue] = useState("");
     const [onlineCount, setOnlineCount] = useState(0);
     const [typingUsers, setTypingUsers] = useState(new Set());
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const soundEnabledRef = useRef(true);
+    
+    // Keep ref in sync
+    useEffect(() => {
+        soundEnabledRef.current = soundEnabled;
+    }, [soundEnabled]);
+
     const typingTimeoutRef = useRef(null);
 
     // Reply State: Array of { id, text, sender }
@@ -317,7 +327,20 @@ const GlobalChat = () => {
         });
 
         socketRef.current.on('chat:broadcast', (message) => {
-            setMessages(prev => (prev.some(m => m.id === message.id) ? prev : [...prev, message]));
+            setMessages(prev => {
+                if (prev.some(m => m.id === message.id)) return prev;
+
+                // Play Sound
+                if (soundEnabledRef.current) {
+                    if (message.sender === (user?.name || "Anonymous")) {
+                        playMessageSentSound();
+                    } else {
+                        playMessageReceivedSound();
+                    }
+                }
+                
+                return [...prev, message];
+            });
         });
 
         socketRef.current.on('chat:history', (history) => {
@@ -608,16 +631,7 @@ const GlobalChat = () => {
 
     return (
         <>
-            <style>{`
-                @keyframes slideUpFade {
-                    from { transform: translateY(20px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                .chat-open {
-                    animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                }
-            `}</style>
-            <div className={`fixed z-50 transition-all duration-300 flex flex-col overflow-hidden font-sans chat-open ${isFullScreen ? "inset-0 w-full h-full rounded-none border-none" : "bottom-6 right-6 w-80 md:w-96 h-[500px] border border-gray-700 rounded-lg shadow-2xl"
+            <div className={`fixed z-50 transition-all duration-300 flex flex-col overflow-hidden font-sans ${styles.chatOpen} ${isFullScreen ? "inset-0 w-full h-full rounded-none border-none" : "bottom-6 right-6 w-80 md:w-96 h-[500px] border border-gray-700 rounded-lg shadow-2xl"
                 } bg-gray-900`}>
                 {/* Header */}
                 <div className="bg-gray-800 p-3 flex justify-between items-center border-b border-gray-700">
@@ -645,6 +659,13 @@ const GlobalChat = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 8V4m0 0h4M20 16v4m0 0h-4" />
                                 </svg>
                             )}
+                        </button>
+                        <button
+                            onClick={() => setSoundEnabled(!soundEnabled)}
+                            className={`text-gray-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors ${soundEnabled ? "text-green-400" : "text-gray-500"}`}
+                            title={soundEnabled ? "Mute Sounds" : "Enable Sounds"}
+                        >
+                            {soundEnabled ? "🔊" : "🔇"}
                         </button>
                         <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">✖</button>
                     </div>

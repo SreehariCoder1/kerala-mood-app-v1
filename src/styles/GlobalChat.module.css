@@ -1,0 +1,35 @@
+@keyframes slideUpFade {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fluidFlow {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 200%; }
+}
+
+@keyframes colorCycle {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+.chatOpen {
+    animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.replyLine::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0.15em;
+    /* Base: Red, White, Red */
+    /* Adjusted stops: 47.5% - 52.5% is a 5% range. In a 200% height background, that's 10% of the element height. */
+    background: linear-gradient(116deg, #4d4b4b 30%, #1a73e8 50%, #4d4b4b 52.5%);
+    background-size: 100% 200%;
+    /* fluidFlow 7s, colorCycle 70s (10x7s) using steps(10) to switch color exactly one per cycle */
+    animation: fluidFlow 7s linear infinite, colorCycle 70s steps(10) infinite;
+    border-radius: 1em;
+    opacity: 0.8;
+}
