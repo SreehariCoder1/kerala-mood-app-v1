@@ -11,7 +11,7 @@ const messageSchema = new mongoose.Schema({
     }],
     likedBy: [{ type: String }],
     dislikedBy: [{ type: String }],
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now, index: true }
 });
 
 // Transform _id to id for frontend compatibility

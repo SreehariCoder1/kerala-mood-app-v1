@@ -16,12 +16,7 @@ const moodEmojis = {
     "Neutral": "😐"
 };
 
-const formatCount = (count) => {
-    if (count >= 1000) {
-        return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-    }
-    return count;
-};
+
 
 // Update: Parsing mentions
 // Update: Parsing mentions
@@ -86,11 +81,11 @@ const ReplyItem = ({ reply, user, onReply, onHide, onHighlight, isHidden, onVote
                 <div className="flex gap-2">
                     {/* Like */}
                     <button onClick={() => handleVoteClick('like')} className={`text-[10px] flex items-center gap-1 ${userVote === 'like' ? 'text-green-400' : 'text-gray-400 hover:text-green-400'}`}>
-                        👍 {likes > 0 && formatCount(likes)}
+                        👍 {likes > 0 && likes}
                     </button>
                     {/* Dislike */}
                     <button onClick={() => handleVoteClick('dislike')} className={`text-[10px] flex items-center gap-1 ${userVote === 'dislike' ? 'text-red-400' : 'text-gray-400 hover:text-red-400'}`}>
-                        👎 {dislikes > 0 && formatCount(dislikes)}
+                        👎 {dislikes > 0 && dislikes}
                     </button>
                     <button onClick={() => onReply(reply)} className="text-[10px] text-gray-400 hover:text-white">↩</button>
                     <button onClick={() => onHide(reply.id)} className="text-[10px] text-gray-400 hover:text-red-500">👁️‍🗨️</button>
@@ -188,10 +183,10 @@ const MessageNode = ({ message, replies = [], user, activeTab, onReply, onHide, 
                     {/* Actions */}
                     <div className="flex gap-2">
                         <button onClick={() => handleVoteClick('like')} className={`text-[10px] flex items-center gap-1 ${userVote === 'like' ? 'text-green-400' : 'text-gray-400 hover:text-green-400'}`}>
-                            👍 {likes > 0 && formatCount(likes)}
+                            👍 {likes > 0 && likes}
                         </button>
                         <button onClick={() => handleVoteClick('dislike')} className={`text-[10px] flex items-center gap-1 ${userVote === 'dislike' ? 'text-red-400' : 'text-gray-400 hover:text-red-400'}`}>
-                            👎 {dislikes > 0 && formatCount(dislikes)}
+                            👎 {dislikes > 0 && dislikes}
                         </button>
                         <button onClick={() => onReply(message)} className="text-[10px] text-gray-400 hover:text-white" title="Reply">
                             ↩
@@ -265,6 +260,7 @@ const GlobalChat = () => {
     const [onlineCount, setOnlineCount] = useState(0);
     const [typingUsers, setTypingUsers] = useState(new Set());
     const [soundEnabled, setSoundEnabled] = useState(true);
+    const [dailyMessageCount, setDailyMessageCount] = useState(0);
     const soundEnabledRef = useRef(true);
     
     // Keep ref in sync
@@ -356,6 +352,10 @@ const GlobalChat = () => {
 
         socketRef.current.on('chat:onlineCount', (count) => {
             setOnlineCount(count);
+        });
+        
+        socketRef.current.on('chat:messageCount', (count) => {
+           setDailyMessageCount(count); 
         });
 
         socketRef.current.on('chat:typing', ({ username }) => {
@@ -622,6 +622,11 @@ const GlobalChat = () => {
                 className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-105"
             >
                 💬 Chat
+                {dailyMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-gray-900 shadow-sm animate-bounce">
+                        {dailyMessageCount}
+                    </span>
+                )}
             </button>
         );
     }
