@@ -210,14 +210,14 @@ const DistrictMap = () => {
                         const voteCount = districtData.count || 0;
                         const colorClass = moodColors[currentMood] || moodColors['default'];
 
-                        // Color mapping for gradients (using RGBA to match bg-opacity-90)
+                        // Color mapping for gradients (using RGBA to match new glassmorphism styles)
                         const moodColorCodes = {
-                            happy: 'rgba(250, 204, 21, 0.9)',   // yellow-400
-                            sad: 'rgba(37, 99, 235, 0.9)',      // blue-600
-                            angry: 'rgba(239, 68, 68, 0.9)',    // red-500
-                            excited: 'rgba(236, 72, 153, 0.9)', // pink-500
-                            neutral: 'rgba(156, 163, 175, 0.9)',// gray-400
-                            default: 'rgba(51, 65, 85, 0.9)'    // slate-700
+                            happy: 'rgba(113, 63, 18, 0.15)',    // yellow-900 (increased opacity for visibility in gradient)
+                            sad: 'rgba(30, 58, 138, 0.15)',      // blue-900
+                            angry: 'rgba(185, 28, 28, 0.15)',    // red-700
+                            excited: 'rgba(131, 24, 67, 0.15)',  // pink-900
+                            neutral: 'rgba(55, 65, 81, 0.15)',   // gray-700
+                            default: 'rgba(15, 23, 42, 0.8)'    // slate-900
                         };
 
                         const isTie = topMoods.length > 1;
@@ -227,7 +227,7 @@ const DistrictMap = () => {
                         if (isTie) {
                             const gradientColors = topMoods.map(m => moodColorCodes[m] || moodColorCodes['default']).join(', ');
                             cardStyle = { background: `linear-gradient(135deg, ${gradientColors})` };
-                            finalColorClass = ''; // Remove single color class to let gradient take over
+                            finalColorClass = 'backdrop-blur-lg backdrop-brightness-110'; // Add glass effect for gradients
                         }
 
                         const moodEmojiMap = {
@@ -705,7 +705,6 @@ const DistrictMap = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-
         </div >
     );
 }

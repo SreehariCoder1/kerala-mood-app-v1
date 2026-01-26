@@ -16,10 +16,10 @@ export const districts = [
 ];
 
 export const moodColors = {
-    happy: 'bg-yellow-400',
-    sad: 'bg-blue-600',
-    angry: 'bg-red-500',
-    excited: 'bg-pink-500',
-    neutral: 'bg-gray-400',
+    happy: 'bg-yellow-900/15 backdrop-blur-lg backdrop-brightness-110',
+    sad: 'bg-blue-900/15 backdrop-blur-lg backdrop-brightness-110',
+    angry: 'bg-red-700/15 backdrop-blur-lg backdrop-brightness-110',
+    excited: 'bg-pink-900/15 backdrop-blur-lg backdrop-brightness-110',
+    neutral: 'bg-gray-700/15 backdrop-blur-lg backdrop-brightness-110',
     default: 'bg-slate-900/80'
 };
