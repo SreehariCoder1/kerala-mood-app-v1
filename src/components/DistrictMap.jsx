@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
+import ThreeBackground from './ThreeBackground';
 import { districts, moodColors } from '../data/districts';
 import MoodSelector from './MoodSelector';
 import AnalyticsPanel from './AnalyticsPanel';
@@ -158,10 +159,11 @@ const DistrictMap = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white relative">
-
+        <div className="min-h-screen bg-transparent text-white relative overflow-hidden">
+            <ThreeBackground />
+            
             {/* Header */}
-            <nav className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center">
+            <nav className="sticky top-0 z-40 px-6 py-4 flex justify-between items-center">
                 <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-purple-500">
                     Kerala Mood Map
                 </h1>

@@ -21,5 +21,5 @@ export const moodColors = {
     angry: 'bg-red-500',
     excited: 'bg-pink-500',
     neutral: 'bg-gray-400',
-    default: 'bg-slate-700'
+    default: 'bg-slate-900/80'
 };
