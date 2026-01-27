@@ -24,11 +24,8 @@
     top: 0;
     bottom: 0;
     width: 0.15em;
-    /* Base: Red, White, Red */
-    /* Adjusted stops: 47.5% - 52.5% is a 5% range. In a 200% height background, that's 10% of the element height. */
     background: linear-gradient(116deg, #4d4b4b 30%, #1a73e8 50%, #4d4b4b 52.5%);
     background-size: 100% 200%;
-    /* fluidFlow 7s, colorCycle 70s (10x7s) using steps(10) to switch color exactly one per cycle */
     animation: fluidFlow 7s linear infinite, colorCycle 70s steps(10) infinite;
     border-radius: 1em;
     opacity: 0.8;

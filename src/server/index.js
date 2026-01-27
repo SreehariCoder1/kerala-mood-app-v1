@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log("Connected to MongoDB"))
+    .then(() => console.log("Connected"))
     .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routes
@@ -57,10 +57,10 @@ app.use('/api/moods', moodRoutes);
 
 // Socket.io Logic
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    console.log('A user connected:');
 
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+        console.log('User disconnected:');
     });
 });
 

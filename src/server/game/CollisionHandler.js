@@ -26,12 +26,10 @@ const addToGrid = (rect) => {
 
 export const loadMapCollisions = () => {
     try {
-        // Adjusted path: one level deeper in 'game' folder, so need one more '../'
+     
         const mapPath = path.resolve(__dirname, '../../../public/game/maps/mood_game_map_v1.tmj');
         if (fs.existsSync(mapPath)) {
-            console.log('Loading map collisions from:', mapPath);
             const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
-
             const tileWidth = mapData.tilewidth;
             const tileHeight = mapData.tileheight;
 
@@ -79,7 +77,7 @@ export const loadMapCollisions = () => {
                 });
             }
 
-            // 2. Iterate Layers to place collisions in world
+            // Iterate Layers to place collisions in world
             let totalRects = 0;
             if (mapData.layers) {
                 mapData.layers.forEach(layer => {
@@ -110,8 +108,6 @@ export const loadMapCollisions = () => {
                 });
             }
 
-            console.log(`Loaded ${totalRects} collision zones into spatial grid.`);
-
         } else {
             console.error('Map file not found for collision loading:', mapPath);
         }
@@ -130,10 +126,6 @@ export const checkMapCollision = (x, y, size) => {
     const col = Math.floor(x / CELL_SIZE);
     const row = Math.floor(y / CELL_SIZE);
     const key = `${col},${row}`;
-
-    // Also check neighbors if we are on the edge, or just simple check:
-    // Ideally we check grid cells that the Player Rect touches.
-    // For simplicity with point/small-size checks, we can check 9 neighbors or just calculate touched cells.
 
     // Robust check: determine loop range for grid keys
     const startCol = Math.floor(pLeft / CELL_SIZE);

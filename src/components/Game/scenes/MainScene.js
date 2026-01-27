@@ -75,12 +75,9 @@ class MainScene extends Phaser.Scene {
         ];
 
         // Create Visual Tile Layers
-        // Note: "collisions" layer is intentionally SKIPPED for rendering
+       
         const botLayer = map.createLayer('Tile Layer 1', tilesets, 0, 0);
         const midLayer1 = map.createLayer('Tile Layer 2', tilesets, 0, 0);
-
-        // createLayer returns null if layer name not found, so check map data if needed.
-        // We know Tile Layer 1 and 2 exist from JSON inspection.
 
         // CREATE OBJECT LAYER (Visual Props)
         const objectLayer = map.getObjectLayer('Object Layer 1');
@@ -124,25 +121,13 @@ class MainScene extends Phaser.Scene {
             // Base Resolution (e.g., HD Ready seems good balance)
             const BASE_WIDTH = 1280;
             const BASE_HEIGHT = 720;
-
-            // Calculate zoom to ensuring SAFE area fits
-            // We want to see AT LEAST the same amount of world as 1280x720.
-            // User requested: "game supports only minimum 720p and above screen, so apply screen appearing area same for these screens"
-            // To ensure "SAME" area on larger screens (and not MORE area), we use Math.max.
-            // This ensures we Zoom IN if the screen is larger/wider to fit the base dimension.
-
             const zoomX = width / BASE_WIDTH;
             const zoomY = height / BASE_HEIGHT;
 
-            // Use the LARGER zoom factor.
-            // If screen is 1920x1080 (1.5x larger than 1280x720), Zoom = 1.5.
-            // Effective View = 1920/1.5 = 1280.
-            // This keeps the visible world area CONSTANT at ~1280x720 regardless of resolution.
             let zoom = Math.max(zoomX, zoomY);
 
             // Clamp: Prevent extreme zoom out (too small items) or extreme zoom in (pixelated)
             // zoom = Phaser.Math.Clamp(zoom, 0.2, 1.5); 
-
             this.cameras.main.setZoom(zoom);
         };
 
@@ -254,12 +239,10 @@ class MainScene extends Phaser.Scene {
         const startBurst = (pointer, soundType) => {
             // Bullet 1
             performShoot(pointer, soundType);
-            // this.sound.play('single_shot');
-
+         
             // Bullet 2 (after 150ms)
             this.secondShotTimer = setTimeout(() => {
                 performShoot(pointer, null);
-                // this.sound.play('burst');
             }, 150);
         };
 

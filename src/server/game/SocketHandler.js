@@ -56,7 +56,7 @@ export const setupGameHandler = (io) => {
                     gameState: games[gameId]
                 });
 
-                console.log(`Match started: ${gameId}`);
+                console.log(`Match started`);
             } else {
                 queue.push(socket);
                 socket.emit('game:waiting');
@@ -82,8 +82,6 @@ export const setupGameHandler = (io) => {
                 const len = Math.sqrt(dx * dx + dy * dy);
 
                 // Enforce Facing Direction
-                // If facing Right (1), reject Left shots (dx < 0)
-                // If facing Left (-1), reject Right shots (dx > 0)
                 if ((p.facing === 1 && dx < 0) || (p.facing === -1 && dx > 0)) {
                     return;
                 }

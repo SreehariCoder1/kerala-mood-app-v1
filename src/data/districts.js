@@ -1,5 +1,5 @@
 export const districts = [
-    { id: 'kasaragod', name: 'Kasargod' }, // Note: Spelling match API enum
+    { id: 'kasaragod', name: 'Kasargod' }, 
     { id: 'kannur', name: 'Kannur' },
     { id: 'wayanad', name: 'Wayanad' },
     { id: 'kozhikode', name: 'Kozhikode' },

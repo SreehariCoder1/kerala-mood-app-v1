@@ -4,24 +4,12 @@ import Message from '../models/Message.js';
 const getISTStartOfDay = () => {
     const now = new Date();
     // Convert current UTC time to IST string
-    // "en-GB" gives dd/mm/yyyy, hh:mm:ss format. We use it to get correct local IST parts
     const istDateString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
     const istDate = new Date(istDateString);
     
     // Reset to midnight IST
     istDate.setHours(0, 0, 0, 0);
-    
-    // Create new Date object that represents that specific time
-    // Note: Creating a Date from the logic above might result in a "Local Server Time" representation of that string
-    // To be precise: We want a Date object that, when compared to stored UTC dates, matches IST midnight.
-    // Simpler approach: Shift the timestamp.
-    
-    // Robust approach:
-    // 1. Get current time
-    // 2. Add 5h 30m
-    // 3. Floor to day
-    // 4. Subtract 5h 30m
-    
+       
     const offset = 5.5 * 60 * 60 * 1000; // IST is +5:30
     const nowTime = now.getTime();
     const istTime = nowTime + offset;
@@ -52,7 +40,6 @@ export const setupChatHandler = (io) => {
             
             cachedDailyCount = count;
             lastCountFetchDate = getISTDateString();
-            console.log(`Daily count synced to: ${count} for date: ${lastCountFetchDate}`);
             return count;
         } catch (err) {
             console.error("Critical Error syncing daily messages:", err);
@@ -91,8 +78,6 @@ export const setupChatHandler = (io) => {
             
             // Broadcast to absolutely everyone
             io.emit('chat:messageCount', newCount);
-            
-            // Beep boop? Maybe play a sound on client side if we wanted to be fancy, but simpler is better.
             
             // Schedule next day
             scheduleMidnightReset();
@@ -183,8 +168,7 @@ export const setupChatHandler = (io) => {
 
         // Listen for chat messages
         socket.on('chat:send', async (data) => {
-            console.log('Server received chat:send:', data);
-
+  
             try {
                 const newMessage = new Message({
                     text: data.text,
@@ -197,11 +181,9 @@ export const setupChatHandler = (io) => {
                 const savedMessage = await newMessage.save();
                 const broadcastData = savedMessage.toJSON();
 
-                console.log('Broadcasting message:', broadcastData);
                 // Broadcast only to room
                 io.to('global_chat').emit('chat:broadcast', broadcastData);
                 
-                // Robust Update Logic
                 const todayIST = getISTDateString();
                 
                 if (todayIST !== lastCountFetchDate) {

@@ -17,9 +17,6 @@ const moodEmojis = {
 };
 
 
-
-// Update: Parsing mentions
-// Update: Parsing mentions
 const renderTextWithLinks = (text) => {
     // Regex for URLs only
     const regex = /((?:https?:\/\/[^\s]+))/g;
@@ -305,12 +302,9 @@ const GlobalChat = () => {
             SOCKET_URL = SOCKET_URL.replace('/api', '');
         }
 
-        console.log("GlobalChat: Connecting to", SOCKET_URL);
-
         socketRef.current = io(SOCKET_URL);
 
         socketRef.current.on('connect', () => {
-            console.log('GlobalChat: Connected to socket', socketRef.current.id);
             // If chat is already open (e.g. after reconnect), re-join
             setIsOpen(prev => {
                 if (prev) socketRef.current.emit('chat:join', { username: user?.name || 'Anonymous' });
@@ -631,9 +625,6 @@ const GlobalChat = () => {
         );
     }
 
-    // Prepare Reply Banner Text
-    // replyingTo is Array
-
     return (
         <>
             <div className={`fixed z-50 transition-all duration-300 flex flex-col overflow-hidden font-sans ${styles.chatOpen} ${isFullScreen ? "inset-0 w-full h-full rounded-none border-none" : "bottom-6 right-6 w-80 md:w-96 h-[500px] border border-gray-700 rounded-lg shadow-2xl"
@@ -745,7 +736,6 @@ const GlobalChat = () => {
                     </div>
                 )}
 
-                {/* Typing Indicator & Reply Banner */}
                 {/* Typing Indicator & Reply Banner */}
                 <div className="bg-gray-800 border-t border-gray-700 flex flex-col text-xs text-gray-300 transition-all">
                     {typingUsers.size > 0 && (

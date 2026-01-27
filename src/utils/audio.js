@@ -11,7 +11,6 @@ const getContext = () => {
     return audioCtx;
 };
 
-// Helper for new sounds (optional reuse)
 const playTone = (freq, type, duration, vol = 0.1, dom = 0) => {
     try {
         const ctx = getContext();
@@ -45,14 +44,12 @@ const playTone = (freq, type, duration, vol = 0.1, dom = 0) => {
 };
 
 export const playMessageSentSound = () => {
-    // "Pop" sound: High sine wave, short decay
     playTone(2000, 'sine', 0.1, 0.8);
 };
 
 export const playMessageReceivedSound = () => {
-    // "Ding" sound: Two tones
     playTone(800, 'sine', 0.15, 0.1);
-    playTone(1200, 'sine', 0.3, 0.05, 0.05); // Delayed high note
+    playTone(1200, 'sine', 0.3, 0.05, 0.05); 
 };
 
 // Mood submit sounds

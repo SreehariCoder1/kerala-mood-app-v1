@@ -60,9 +60,6 @@ const DistrictMap = () => {
             }, 15000); // Hide after 5 seconds
         };
 
-        // Initial trigger
-        // toggleImages(); // Optional: trigger immediately on load? user said "every 30 seconds"
-
         const imageInterval = setInterval(toggleImages, 40000);
         return () => clearInterval(imageInterval);
     }, []);
@@ -104,9 +101,6 @@ const DistrictMap = () => {
             setShowComparison(false);
             setIsMenuOpen(false);
             setIsMenuOpen(false);
-
-            // If on mobile, maybe make it fullscreen?
-            // For now keep default behavior
         };
 
         window.addEventListener('OPEN_MOOD_REASON', handleOpenReason);
@@ -210,14 +204,14 @@ const DistrictMap = () => {
                         const voteCount = districtData.count || 0;
                         const colorClass = moodColors[currentMood] || moodColors['default'];
 
-                        // Color mapping for gradients (using RGBA to match new glassmorphism styles)
+                        // Color mapping for gradients 
                         const moodColorCodes = {
-                            happy: 'rgba(113, 63, 18, 0.15)',    // yellow-900 (increased opacity for visibility in gradient)
-                            sad: 'rgba(30, 58, 138, 0.15)',      // blue-900
-                            angry: 'rgba(185, 28, 28, 0.15)',    // red-700
-                            excited: 'rgba(131, 24, 67, 0.15)',  // pink-900
-                            neutral: 'rgba(55, 65, 81, 0.15)',   // gray-700
-                            default: 'rgba(15, 23, 42, 0.8)'    // slate-900
+                            happy: 'rgba(113, 63, 18, 0.15)',    
+                            sad: 'rgba(30, 58, 138, 0.15)',      
+                            angry: 'rgba(185, 28, 28, 0.15)',    
+                            excited: 'rgba(131, 24, 67, 0.15)',  
+                            neutral: 'rgba(55, 65, 81, 0.15)',   
+                            default: 'rgba(15, 23, 42, 0.8)'    
                         };
 
                         const isTie = topMoods.length > 1;

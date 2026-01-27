@@ -59,10 +59,6 @@ export class GameState {
 
         const now = Date.now();
         this.lastUpdateTime = now;
-
-        // Timer Logic (Decrement based on TICK_RATE calls ~ roughly 1/TICK_RATE seconds per call, 
-        // but easier to just decrement by delta time or fixed step if loop is fixed)
-        // Since the outer loop is setInterval(..., 1000/TICK_RATE), we decrement by 1/TICK_RATE
         this.timeLeft -= (1 / TICK_RATE);
 
         // 1. Process Inputs & Apply Physics
@@ -188,7 +184,6 @@ export class GameState {
                             let spawnPos = { x: player.spawnX, y: player.spawnY };
 
                             // 1. Identify Enemy Position
-                            // We need to find the OTHER player.
                             const enemy = Object.values(this.players).find(p => p.id !== player.id);
 
                             if (enemy) {
@@ -263,4 +258,4 @@ export class GameState {
     }
 }
 
-export const PROJ_SPEED_EXPORT = PROJ_SPEED; // Exported for SocketHandler if needed (it uses it to calculate velocity)
+export const PROJ_SPEED_EXPORT = PROJ_SPEED; 

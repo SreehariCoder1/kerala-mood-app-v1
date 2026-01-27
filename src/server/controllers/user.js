@@ -15,8 +15,6 @@ export const googleAuth = async (req, res) => {
         });
 
         const payload = ticket.getPayload();
-
-        // Construct user info from payload (matches what we got from userinfo endpoint)
         const googleInfo = {
             sub: payload.sub,
             email: payload.email,

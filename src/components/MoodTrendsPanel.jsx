@@ -7,11 +7,11 @@ import {
 } from 'recharts';
 
 const moodColors = {
-    happy: '#FACC15',   // yellow-400
-    excited: '#EC4899', // pink-500
-    neutral: '#9CA3AF', // gray-400
-    sad: '#2563EB',     // blue-600
-    angry: '#EF4444'    // red-500
+    happy: '#FACC15',   
+    excited: '#EC4899', 
+    neutral: '#9CA3AF', 
+    sad: '#2563EB',     
+    angry: '#EF4444'    
 };
 
 const MoodTrendsPanel = () => {

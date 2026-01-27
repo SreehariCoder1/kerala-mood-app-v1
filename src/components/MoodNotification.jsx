@@ -16,16 +16,11 @@ const MoodNotification = () => {
         const socketUrl = config.API_URL.replace('/api', '');
         const socket = io(socketUrl);
 
-        socket.on('connect', () => {
-            console.log('Connected to socket server:', socketUrl);
-        });
-
         socket.on('connect_error', (err) => {
             console.error('Socket connection error:', err);
         });
 
         socket.on('mood_update', (data) => {
-            console.log('Received mood update:', data);
             // Add to queue
             queueRef.current.push(data);
             // Try to process immediately if not already processing

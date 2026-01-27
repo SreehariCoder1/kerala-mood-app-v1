@@ -58,8 +58,7 @@ const MoodReasonsPanel = ({ highlightedId }) => {
         const itemExists = reasons.find(r => r._id === highlightedId);
 
         if (itemExists) {
-            // Wait a tick for render (if filter was just cleared?)
-            // Actually, if filter is preventing it, we should clear filter
+          
             if (filter !== 'all' && itemExists.mood !== filter) {
                 setFilter('all');
                 setTimeout(scrollToItem, 100);
@@ -67,7 +66,7 @@ const MoodReasonsPanel = ({ highlightedId }) => {
                 setTimeout(scrollToItem, 100);
             }
         } else {
-            // Not found, maybe new? Fetch and then try
+           
             fetchReasons().then((newReasons) => {
                 const found = newReasons?.find(r => r._id === highlightedId);
                 if (found) {

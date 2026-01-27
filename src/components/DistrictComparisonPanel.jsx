@@ -70,7 +70,7 @@ const CustomDropdown = ({ options, value, onChange, label }) => {
 const DistrictComparisonPanel = ({ districtMoods }) => {
     const [district1, setDistrict1] = useState(districts[0]?.id);
     const [district2, setDistrict2] = useState(districts[1]?.id || districts[0]?.id);
-    // ... rest of logic remains the same ...
+
     const getDistrictData = (id) => {
         return districtMoods[id] || { count: 0, mood: 'default', topMoods: ['default'], moods: {} };
     };

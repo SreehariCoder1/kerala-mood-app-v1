@@ -18,17 +18,12 @@ const Game = () => {
 
     // Connect to Socket
     useEffect(() => {
-        // Ensure we are using the correct base URL without /api suffix if the socket expects root
-        // But usually socket.io client handles it.
-        // If config.API_URL is http://localhost:5001/api, socket should probably connect to http://localhost:5001
 
         let socketUrl = config.API_URL;
         // Strip /api if present for socket connection usually
         if (socketUrl.endsWith('/api')) {
             socketUrl = socketUrl.replace('/api', '');
         }
-
-        console.log('Connecting to Game Server at:', socketUrl);
 
         const newSocket = io(socketUrl, {
             transports: ['websocket', 'polling'],
@@ -38,7 +33,6 @@ const Game = () => {
         setSocket(newSocket);
 
         newSocket.on('connect', () => {
-            console.log('Connected to game server with ID:', newSocket.id);
             setIsConnected(true);
         });
 
@@ -92,8 +86,6 @@ const Game = () => {
 
     return (
         <div className="min-h-screen bg-slate-900 overflow-hidden relative font-sans">
-            {/* Background Particles or texture could go here */}
-
             {/* Back Button */}
             <button
                 onClick={() => navigate('/map')}
